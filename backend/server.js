@@ -35,6 +35,8 @@ mongoose
     app.listen(config.port, () => console.log(`Server on http://localhost:${config.port}`));
   })
   .catch((err) => {
-    console.error(`MongoDB connection failed: ${err.name}`);
+    const code = err.codeName ? ` (${err.codeName} ${err.code})` : '';
+    const hint = err.code === 8000 ? '. Check the database username and password in MONGODB_URI' : '';
+    console.error(`MongoDB connection failed: ${err.name}${code}${hint}`);
     process.exit(1);
   });
