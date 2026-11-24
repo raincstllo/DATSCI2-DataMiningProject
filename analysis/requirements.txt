@@ -1,0 +1,8 @@
+# Python 3.12, Java 17+ (tested on Java 25)
+pyspark==4.3.0
+pymongo==4.20.1
+python-dotenv==1.2.4
+pandas==2.3.3
+pyarrow==26.0.1
+numpy==2.5.5
+scikit-learn==1.9.1

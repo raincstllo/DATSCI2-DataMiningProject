@@ -45,3 +45,8 @@ Thumbs.db
 
 # Local data files (dummy CSVs, never committed)
 /data
+
+# Python
+/analysis/.venv
+__pycache__/
+*.pyc
