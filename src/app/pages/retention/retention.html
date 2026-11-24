@@ -1,0 +1,350 @@
+<h1>Patient retention</h1>
+<p class="lead">
+  Groups patients into segments by how recently they visited, how often they come and how much
+  they have spent, using K-Means clustering. Use the segments to plan follow-ups.
+</p>
+
+<!-- Run the pipeline live -->
+<section class="card run" aria-labelledby="run-heading">
+  <div class="run-head">
+    <div>
+      <h2 id="run-heading">Run analysis</h2>
+      <p class="muted">
+        Loads the visit records, cleans them with PySpark, then runs K-Means. Takes 1 to 2
+        minutes.
+      </p>
+    </div>
+    <button type="button" class="btn" (click)="run()" [disabled]="running()">
+      {{ running() ? 'Running…' : 'Run analysis' }}
+    </button>
+  </div>
+
+  <p class="visually-hidden" role="status" aria-live="polite">{{ liveStatus() }}</p>
+
+  @if (runError(); as message) {
+    <p class="alert alert-error" role="alert">{{ message }}</p>
+  }
+
+  @if (job(); as j) {
+    <h3>Pipeline steps</h3>
+    <ol class="steps">
+      @for (s of steps(); track s.key) {
+        <li [class.step-error]="s.error">
+          <span class="step-mark" aria-hidden="true">{{ s.error ? '✕' : '✓' }}</span>
+          {{ s.text }}
+        </li>
+      }
+      @if (j.status === 'running') {
+        <li class="step-pending">
+          <span class="step-mark" aria-hidden="true">…</span>
+          {{ finishing() ? 'Closing Spark and loading results' : 'Working on the next step' }}
+        </li>
+      }
+    </ol>
+    @if (j.status === 'failed' && j.error) {
+      <p class="alert alert-error">Analysis failed: {{ j.error }}</p>
+    }
+  }
+</section>
+
+@switch (loadState()) {
+  @case ('loading') {
+    <p role="status">Loading the latest results…</p>
+  }
+  @case ('empty') {
+    <p class="alert">No results yet. Select <strong>Run analysis</strong> to create the first one.</p>
+  }
+  @case ('error') {
+    <p class="alert alert-error" role="alert">
+      The results could not be loaded. Check that the backend is running, then reload the page.
+    </p>
+  }
+  @case ('ready') {
+    @if (result(); as r) {
+      <p class="muted meta">
+        Results from {{ fmt.dateTime(r.generated_at) }}, using visits up to
+        {{ fmt.date(r.payload.as_of) }}.
+      </p>
+
+      <!-- Segments -->
+      <section aria-labelledby="segments-heading">
+        <h2 id="segments-heading">Segments</h2>
+        <ul class="segment-grid">
+          @for (s of r.payload.segments; track s.segment) {
+            <li class="card segment">
+              <h3>
+                <span class="shape shape-{{ s.segment }}" aria-hidden="true"></span>
+                {{ s.segment }}
+              </h3>
+              <p class="segment-count">
+                <strong>{{ fmt.number(s.patients) }}</strong> patients
+                <span class="muted">({{ fmt.percent(s.share) }})</span>
+              </p>
+              <dl class="stats">
+                <div>
+                  <dt>Avg. days since last visit</dt>
+                  <dd>{{ fmt.number(s.avg_recency_days) }}</dd>
+                </div>
+                <div>
+                  <dt>Avg. visits</dt>
+                  <dd>{{ s.avg_visits }}</dd>
+                </div>
+                <div>
+                  <dt>Avg. spend</dt>
+                  <dd>{{ fmt.peso(s.avg_total_fee) }}</dd>
+                </div>
+                <div>
+                  <dt>Total revenue</dt>
+                  <dd>{{ fmt.peso(s.total_revenue) }}</dd>
+                </div>
+              </dl>
+              <p class="strategy"><strong>Follow-up:</strong> {{ s.strategy }}</p>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <!-- Scatter -->
+      <section class="card chart-card" aria-labelledby="scatter-heading">
+        <h2 id="scatter-heading">How the segments separate</h2>
+        <p class="muted">
+          Each mark is one patient. Further right means longer since their last visit; higher
+          means more spent in total.
+        </p>
+        <div class="chart-box chart-tall">
+          <canvas
+            baseChart
+            type="scatter"
+            role="img"
+            [attr.aria-label]="scatterLabel()"
+            [data]="scatterData()"
+            [options]="scatterOptions()"
+          ></canvas>
+        </div>
+        <details>
+          <summary>Show data table</summary>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                Segment averages. Every patient's values are in the follow-up list below.
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Segment</th>
+                  <th scope="col">Shape</th>
+                  <th scope="col" class="num">Patients</th>
+                  <th scope="col" class="num">Avg. days since last visit</th>
+                  <th scope="col" class="num">Avg. spend</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of r.payload.segments; track s.segment) {
+                  <tr>
+                    <th scope="row">{{ s.segment }}</th>
+                    <td>{{ shapeNames[s.segment] }}</td>
+                    <td class="num">{{ fmt.number(s.patients) }}</td>
+                    <td class="num">{{ fmt.number(s.avg_recency_days) }}</td>
+                    <td class="num">{{ fmt.peso(s.avg_total_fee) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p><a href="#followup-heading">Go to the follow-up list</a></p>
+        </details>
+      </section>
+
+      <!-- Follow-up list -->
+      <section class="card" aria-labelledby="followup-heading">
+        <h2 id="followup-heading" tabindex="-1">Follow-up list</h2>
+        <p class="muted">Patients by segment, for planning reminders and win-back calls.</p>
+
+        <div class="filters">
+          <div class="field">
+            <label for="seg-filter">Segment</label>
+            <select
+              id="seg-filter"
+              [value]="segmentFilter()"
+              (change)="setSegment($any($event.target).value)"
+            >
+              <option value="all">All segments</option>
+              @for (s of segments; track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="name-search">Search by name</label>
+            <input
+              id="name-search"
+              type="search"
+              autocomplete="off"
+              [value]="search()"
+              (input)="setSearch($any($event.target).value)"
+            />
+          </div>
+          <div class="field">
+            <label for="sort">Sort by</label>
+            <select id="sort" [value]="sort()" (change)="setSort($any($event.target).value)">
+              <option value="recency">Longest since last visit</option>
+              <option value="spend">Highest total spend</option>
+              <option value="name">Name (A–Z)</option>
+            </select>
+          </div>
+        </div>
+
+        <p role="status" class="range">{{ rangeText() }}</p>
+
+        <div class="table-wrap">
+          <table>
+            <caption class="visually-hidden">
+              Follow-up list, {{ rangeText() }}
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Segment</th>
+                <th scope="col">Last visit</th>
+                <th scope="col" class="num">Days since</th>
+                <th scope="col" class="num">Visits</th>
+                <th scope="col" class="num">Total spend</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of pageRows(); track p.name) {
+                <tr>
+                  <th scope="row">{{ p.name }}</th>
+                  <td>
+                    <span class="seg-cell">
+                      <span class="shape shape-{{ p.segment }}" aria-hidden="true"></span>
+                      {{ p.segment }}
+                    </span>
+                  </td>
+                  <td>{{ fmt.date(p.last_visit) }}</td>
+                  <td class="num">{{ fmt.number(p.recency_days) }}</td>
+                  <td class="num">{{ p.visits }}</td>
+                  <td class="num">{{ fmt.peso(p.total_fee) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (pageCount() > 1) {
+          <nav class="pager" aria-label="Follow-up list pages">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="goTo(page() - 1)"
+              [disabled]="page() === 0"
+            >
+              Previous
+            </button>
+            <span>Page {{ page() + 1 }} of {{ pageCount() }}</span>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="goTo(page() + 1)"
+              [disabled]="page() >= pageCount() - 1"
+            >
+              Next
+            </button>
+          </nav>
+        }
+      </section>
+
+      <!-- Evaluation -->
+      <section class="card" aria-labelledby="eval-heading">
+        <h2 id="eval-heading">Model evaluation</h2>
+        <div class="eval-grid">
+          <div>
+            <dl class="stats">
+              <div>
+                <dt>Algorithm</dt>
+                <dd>{{ r.metrics.algorithm }}</dd>
+              </div>
+              <div>
+                <dt>Segments (k)</dt>
+                <dd>{{ r.metrics.k }}</dd>
+              </div>
+              <div>
+                <dt>Silhouette score</dt>
+                <dd>{{ r.metrics.silhouette.toFixed(3) }}</dd>
+              </div>
+              <div>
+                <dt>Features</dt>
+                <dd>Days since last visit, number of visits, total spend (log), standardized</dd>
+              </div>
+            </dl>
+            <p class="muted small">
+              Silhouette ranges from −1 to 1; higher means patients sit closer to their own segment
+              than to others. k = 3 matches the three planned segments.
+            </p>
+
+            <h3>Data cleaning</h3>
+            <dl class="stats">
+              <div>
+                <dt>Rows loaded</dt>
+                <dd>{{ fmt.number(r.metrics.etl.rows_loaded) }}</dd>
+              </div>
+              <div>
+                <dt>Duplicate rows removed</dt>
+                <dd>{{ fmt.number(r.metrics.etl.duplicates_dropped) }}</dd>
+              </div>
+              <div>
+                <dt>Future-dated rows removed</dt>
+                <dd>{{ fmt.number(r.metrics.etl.future_rows_dropped) }}</dd>
+              </div>
+              <div>
+                <dt>Clean rows</dt>
+                <dd>{{ fmt.number(r.metrics.etl.rows_clean) }}</dd>
+              </div>
+              <div>
+                <dt>Visits</dt>
+                <dd>{{ fmt.number(r.metrics.etl.visits_clean) }}</dd>
+              </div>
+              <div>
+                <dt>Patients</dt>
+                <dd>{{ fmt.number(r.metrics.etl.patients_clean) }}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div>
+            <h3 id="sil-heading">Silhouette score by number of segments</h3>
+            <div class="chart-box">
+              <canvas
+                baseChart
+                type="bar"
+                role="img"
+                [attr.aria-label]="silhouetteLabel()"
+                [data]="silhouetteData()"
+                [options]="silhouetteOptions()"
+              ></canvas>
+            </div>
+            <details>
+              <summary>Show data table</summary>
+              <table>
+                <caption class="visually-hidden">Silhouette score by number of segments</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Segments (k)</th>
+                    <th scope="col" class="num">Silhouette score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of silhouetteRows(); track row.k) {
+                    <tr>
+                      <th scope="row">{{ row.k }}{{ row.used ? ' (used)' : '' }}</th>
+                      <td class="num">{{ row.score.toFixed(3) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </details>
+          </div>
+        </div>
+      </section>
+    }
+  }
+}

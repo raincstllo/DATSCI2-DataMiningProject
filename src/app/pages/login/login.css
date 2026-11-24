@@ -1,0 +1,16 @@
+.login {
+  max-width: 26rem;
+  margin: 2rem auto 0;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.alert:focus {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
