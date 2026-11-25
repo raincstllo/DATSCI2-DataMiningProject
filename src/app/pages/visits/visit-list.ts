@@ -6,103 +6,15 @@ import { Page, Visit } from '../../core/records.models';
 import { readApiError, RecordsService } from '../../core/records.service';
 import { ConfirmDialog } from '../../shared/confirm-dialog';
 import { Pager } from '../../shared/pager';
+import { ToothStrip } from '../../shared/tooth-strip';
 
 const PAGE_SIZE = 25;
 
 @Component({
   selector: 'app-visit-list',
-  imports: [RouterLink, Pager, ConfirmDialog],
-  template: `
-    <div class="stack">
-      <div class="page-head">
-        <h1>Visits</h1>
-        <a class="btn" routerLink="/visits/new">Log visit</a>
-      </div>
-
-      <section class="card" aria-labelledby="list-heading">
-        <h2 id="list-heading" class="visually-hidden">Visit list</h2>
-        <form class="filters" role="search" aria-label="Filter visits" (submit)="$event.preventDefault()">
-          <div class="field">
-            <label for="visit-search">Patient name, patient ID or visit ID</label>
-            <input id="visit-search" type="search" autocomplete="off" [value]="q()" (input)="setText($any($event.target).value)" />
-          </div>
-          <div class="field">
-            <label for="visit-service">Service</label>
-            <select id="visit-service" [value]="service()" (change)="setFilter('service', $any($event.target).value)">
-              <option value="" [selected]="!service()">All services</option>
-              @for (s of services() ?? []; track s) {
-                <option [value]="s" [selected]="s === service()">{{ s }}</option>
-              }
-            </select>
-          </div>
-          <div class="field">
-            <label for="visit-from">From</label>
-            <input id="visit-from" type="date" [value]="from()" (change)="setFilter('from', $any($event.target).value)" />
-          </div>
-          <div class="field">
-            <label for="visit-to">To</label>
-            <input id="visit-to" type="date" [value]="to()" (change)="setFilter('to', $any($event.target).value)" />
-          </div>
-        </form>
-
-        <p role="status" class="muted">{{ status() }}</p>
-        @if (error(); as message) {
-          <p class="alert alert-error" role="alert">{{ message }}</p>
-        }
-
-        @if (data(); as d) {
-          @if (d.items.length) {
-            <div class="table-wrap" tabindex="0" role="region" aria-label="Visits table">
-              <table>
-                <caption class="visually-hidden">Visits, newest first</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Patient</th>
-                    <th scope="col">Services</th>
-                    <th scope="col" class="num">Total</th>
-                    <th scope="col">Visit ID</th>
-                    <th scope="col"><span class="visually-hidden">Actions</span></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (v of d.items; track v.visit_id) {
-                    <tr>
-                      <th scope="row">
-                        {{ date(v.date_visited) }}
-                        @if (v.date_visited > today) {
-                          <span class="tag tag-warning">Future date, not used in analysis</span>
-                        }
-                      </th>
-                      <td>
-                        <a [routerLink]="['/patients', v.patient_id]">{{ v.patient_name ?? v.patient_id }}</a>
-                      </td>
-                      <td class="cell-wrap">{{ serviceText(v) }}</td>
-                      <td class="num">{{ peso(v.total_fee) }}</td>
-                      <td>{{ v.visit_id }}</td>
-                      <td>
-                        <div class="actions">
-                          <a class="btn btn-secondary btn-small" [routerLink]="['/visits', v.visit_id, 'edit']"
-                            >Edit <span class="visually-hidden">visit {{ v.visit_id }}</span></a
-                          >
-                          <button type="button" class="btn btn-secondary btn-small" (click)="remove(v)">
-                            Delete <span class="visually-hidden">visit {{ v.visit_id }}</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-          <app-pager [page]="page()" [total]="d.total" [pageSize]="pageSize" label="Visit list pages" (pageChange)="goTo($event)" />
-        }
-      </section>
-
-      <app-confirm-dialog heading="Delete this visit?" [message]="deleteMessage()" confirmLabel="Delete visit" />
-    </div>
-  `,
+  imports: [RouterLink, Pager, ConfirmDialog, ToothStrip],
+  templateUrl: './visit-list.html',
+  styleUrl: './visit-list.css',
 })
 export class VisitList implements OnInit {
   private readonly records = inject(RecordsService);
