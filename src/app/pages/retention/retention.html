@@ -4,48 +4,11 @@
   they have spent, using K-Means clustering. Use the segments to plan follow-ups.
 </p>
 
-<!-- Run the pipeline live -->
-<section class="card run" aria-labelledby="run-heading">
-  <div class="run-head">
-    <div>
-      <h2 id="run-heading">Run analysis</h2>
-      <p class="muted">
-        Loads the visit records, cleans them with PySpark, then runs K-Means. Takes 1 to 2
-        minutes.
-      </p>
-    </div>
-    <button type="button" class="btn" (click)="run()" [disabled]="running()">
-      {{ running() ? 'Running…' : 'Run analysis' }}
-    </button>
-  </div>
-
-  <p class="visually-hidden" role="status" aria-live="polite">{{ liveStatus() }}</p>
-
-  @if (runError(); as message) {
-    <p class="alert alert-error" role="alert">{{ message }}</p>
-  }
-
-  @if (job(); as j) {
-    <h3>Pipeline steps</h3>
-    <ol class="steps">
-      @for (s of steps(); track s.key) {
-        <li [class.step-error]="s.error">
-          <span class="step-mark" aria-hidden="true">{{ s.error ? '✕' : '✓' }}</span>
-          {{ s.text }}
-        </li>
-      }
-      @if (j.status === 'running') {
-        <li class="step-pending">
-          <span class="step-mark" aria-hidden="true">…</span>
-          {{ finishing() ? 'Closing Spark and loading results' : 'Working on the next step' }}
-        </li>
-      }
-    </ol>
-    @if (j.status === 'failed' && j.error) {
-      <p class="alert alert-error">Analysis failed: {{ j.error }}</p>
-    }
-  }
-</section>
+<app-run-panel
+  type="retention"
+  description="Loads the visit records, cleans them with PySpark, then runs K-Means. Takes 1 to 2 minutes."
+  (completed)="loadLatest()"
+/>
 
 @switch (loadState()) {
   @case ('loading') {
