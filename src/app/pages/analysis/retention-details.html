@@ -1,136 +1,166 @@
 @switch (state().status) {
+  @case ('loading') {
+    @if (!result()) {
+      <p class="record-note" role="status">Loading…</p>
+    }
+  }
   @case ('empty') {
-    <p class="alert">No retention results yet. Use <strong>Run analysis</strong> above.</p>
+    <p class="record-note">
+      <span class="mark mark-expected" aria-hidden="true"></span>
+      <span>No retention results yet. Use <strong>Run analysis</strong> above.</span>
+    </p>
   }
   @case ('error') {
-    <p class="alert alert-error" role="alert">The retention results could not be loaded.</p>
+    <p class="record-note record-note-error" role="alert">
+      <span class="mark mark-attention" aria-hidden="true"></span>
+      <span>The retention results could not be loaded.</span>
+    </p>
   }
 }
 
 @if (result(); as r) {
-  <p class="muted meta">Results from {{ fmt.dateTime(r.generated_at) }}.</p>
+  <p class="result-meta">Results from {{ fmt.dateTime(r.generated_at) }}.</p>
 
-  <section class="card" aria-labelledby="ret-scatter-heading">
-    <h3 id="ret-scatter-heading">How the segments separate</h3>
-    <p class="muted">
-      Each mark is one patient. Further right means longer since their last visit; higher means
-      more spent in total. Segment names in plain language: Frequent = {{ labels.Frequent }},
-      Infrequent = {{ labels.Infrequent }}, Inactive = {{ labels.Inactive }}.
-    </p>
-    <div class="chart-box chart-tall">
-      <canvas
-        baseChart
-        type="scatter"
-        role="img"
-        [attr.aria-label]="scatterLabel()"
-        [data]="scatterData()"
-        [options]="scatterOptions()"
-      ></canvas>
-    </div>
-    <details>
-      <summary>Show data table</summary>
-      <div class="table-wrap" tabindex="0" role="region" aria-label="Segment averages table">
-        <table>
-          <caption>Segment averages. Every patient's values are on the Follow-ups page.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Segment</th>
-              <th scope="col">Shape</th>
-              <th scope="col" class="num">Patients</th>
-              <th scope="col" class="num">Avg. days since last visit</th>
-              <th scope="col" class="num">Avg. visits</th>
-              <th scope="col" class="num">Avg. spend</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (s of r.payload.segments; track s.segment) {
+  <h3 id="ret-eval-heading" class="visually-hidden">Model evaluation</h3>
+  <ul class="figures" aria-labelledby="ret-eval-heading">
+    <li class="fig fig-lead">
+      <p class="fig-label"><span class="mark" aria-hidden="true"></span>Silhouette score</p>
+      <p class="fig-value">{{ r.metrics.silhouette.toFixed(3) }}</p>
+      <p class="fig-note">
+        Ranges from −1 to 1; higher means patients sit closer to their own segment than to others.
+      </p>
+    </li>
+    <li class="fig">
+      <p class="fig-label"><span class="mark" aria-hidden="true"></span>Segments (k)</p>
+      <p class="fig-value">{{ r.metrics.k }}</p>
+      <p class="fig-note">
+        @if (r.metrics.k === 3) {
+          k = 3 matches the three planned segments.
+        }
+      </p>
+    </li>
+    <li class="fig">
+      <p class="fig-label"><span class="mark" aria-hidden="true"></span>Inertia</p>
+      <p class="fig-value">{{ fmt.number(r.metrics.inertia) }}</p>
+      <p class="fig-note">Spread of patients around their segment centres.</p>
+    </li>
+    <li class="fig">
+      <p class="fig-label"><span class="mark" aria-hidden="true"></span>Algorithm</p>
+      <p class="fig-value fig-text">{{ r.metrics.algorithm }}</p>
+      <p class="fig-note">
+        Features: days since last visit, number of visits, total spend (log), standardized.
+      </p>
+    </li>
+  </ul>
+
+  <div class="sheet">
+    <section class="record-cell wide" aria-labelledby="ret-scatter-heading">
+      <h3 id="ret-scatter-heading">How the segments separate</h3>
+      <p class="cell-note">
+        Each mark is one patient. Further right means longer since their last visit; higher means
+        more spent in total. Segment names in plain language: Frequent = {{ labels.Frequent }},
+        Infrequent = {{ labels.Infrequent }}, Inactive = {{ labels.Inactive }}.
+      </p>
+      <div class="chart-box chart-tall">
+        <canvas
+          baseChart
+          type="scatter"
+          role="img"
+          [attr.aria-label]="scatterLabel()"
+          [data]="scatterData()"
+          [options]="scatterOptions()"
+        ></canvas>
+      </div>
+      <details>
+        <summary>Show data table</summary>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Segment averages table">
+          <table>
+            <caption>Segment averages. Every patient's values are on the Follow-ups page.</caption>
+            <thead>
               <tr>
-                <th scope="row">{{ s.segment }}</th>
-                <td>{{ shapeNames[s.segment] }}</td>
-                <td class="num">{{ fmt.number(s.patients) }}</td>
-                <td class="num">{{ fmt.number(s.avg_recency_days) }}</td>
-                <td class="num">{{ s.avg_visits }}</td>
-                <td class="num">{{ fmt.peso(s.avg_total_fee) }}</td>
+                <th scope="col">Segment</th>
+                <th scope="col">Shape</th>
+                <th scope="col" class="num">Patients</th>
+                <th scope="col" class="num">Avg. days since last visit</th>
+                <th scope="col" class="num">Avg. visits</th>
+                <th scope="col" class="num">Avg. spend</th>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </details>
-  </section>
-
-  <section class="card" aria-labelledby="ret-eval-heading">
-    <h3 id="ret-eval-heading">Model evaluation</h3>
-    <div class="eval-grid">
-      <div>
-        <dl class="stats">
-          <div><dt>Algorithm</dt><dd>{{ r.metrics.algorithm }}</dd></div>
-          <div><dt>Segments (k)</dt><dd>{{ r.metrics.k }}</dd></div>
-          <div><dt>Silhouette score</dt><dd>{{ r.metrics.silhouette.toFixed(3) }}</dd></div>
-          <div><dt>Inertia</dt><dd>{{ fmt.number(r.metrics.inertia) }}</dd></div>
-          <div>
-            <dt>Features</dt>
-            <dd>Days since last visit, number of visits, total spend (log), standardized</dd>
-          </div>
-        </dl>
-        <p class="muted small">
-          Silhouette ranges from −1 to 1; higher means patients sit closer to their own segment than
-          to others. k = 3 matches the three planned segments.
-        </p>
-
-        <h4>Data cleaning (PySpark)</h4>
-        <dl class="stats">
-          <div><dt>Rows loaded</dt><dd>{{ fmt.number(r.metrics.etl.rows_loaded) }}</dd></div>
-          <div><dt>Duplicate rows removed</dt><dd>{{ fmt.number(r.metrics.etl.duplicates_dropped) }}</dd></div>
-          <div><dt>Future-dated rows removed</dt><dd>{{ fmt.number(r.metrics.etl.future_rows_dropped) }}</dd></div>
-          <div><dt>Clean rows</dt><dd>{{ fmt.number(r.metrics.etl.rows_clean) }}</dd></div>
-          <div><dt>Visits</dt><dd>{{ fmt.number(r.metrics.etl.visits_clean) }}</dd></div>
-          <div><dt>Patients</dt><dd>{{ fmt.number(r.metrics.etl.patients_clean) }}</dd></div>
-          <div><dt>Likely duplicate patients</dt><dd>{{ fmt.number(r.metrics.etl.likely_duplicate_patients) }}</dd></div>
-          @if (r.metrics.etl.inconsistent_patient_ids !== undefined) {
-            <div>
-              <dt>Patient IDs with conflicting details</dt>
-              <dd>{{ fmt.number(r.metrics.etl.inconsistent_patient_ids) }}</dd>
-            </div>
-          }
-        </dl>
-      </div>
-
-      <div>
-        <h4>Silhouette score by number of segments</h4>
-        <div class="chart-box">
-          <canvas
-            baseChart
-            type="bar"
-            role="img"
-            [attr.aria-label]="silhouetteLabel()"
-            [data]="silhouetteData()"
-            [options]="silhouetteOptions()"
-          ></canvas>
-        </div>
-        <details>
-          <summary>Show data table</summary>
-          <div class="table-wrap" tabindex="0" role="region" aria-label="Silhouette table">
-            <table>
-              <caption class="visually-hidden">Silhouette score by number of segments</caption>
-              <thead>
+            </thead>
+            <tbody>
+              @for (s of r.payload.segments; track s.segment) {
                 <tr>
-                  <th scope="col">Segments (k)</th>
-                  <th scope="col" class="num">Silhouette score</th>
+                  <th scope="row">
+                    <span class="seg-cell">
+                      <span class="shape shape-{{ s.segment }}" aria-hidden="true"></span>
+                      {{ s.segment }}
+                    </span>
+                  </th>
+                  <td>{{ shapeNames[s.segment] }}</td>
+                  <td class="num">{{ fmt.number(s.patients) }}</td>
+                  <td class="num">{{ fmt.number(s.avg_recency_days) }}</td>
+                  <td class="num">{{ s.avg_visits }}</td>
+                  <td class="num">{{ fmt.peso(s.avg_total_fee) }}</td>
                 </tr>
-              </thead>
-              <tbody>
-                @for (row of silhouetteRows(); track row.k) {
-                  <tr>
-                    <th scope="row">{{ row.k }}{{ row.used ? ' (used)' : '' }}</th>
-                    <td class="num">{{ row.score.toFixed(3) }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </details>
+              }
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section class="record-cell" aria-labelledby="ret-k-heading">
+      <h3 id="ret-k-heading">Silhouette score by number of segments</h3>
+      <div class="chart-box">
+        <canvas
+          baseChart
+          type="bar"
+          role="img"
+          [attr.aria-label]="silhouetteLabel()"
+          [data]="silhouetteData()"
+          [options]="silhouetteOptions()"
+        ></canvas>
       </div>
-    </div>
-  </section>
+      <details>
+        <summary>Show data table</summary>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Silhouette table">
+          <table>
+            <caption class="visually-hidden">Silhouette score by number of segments</caption>
+            <thead>
+              <tr>
+                <th scope="col">Segments (k)</th>
+                <th scope="col" class="num">Silhouette score</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of silhouetteRows(); track row.k) {
+                <tr>
+                  <th scope="row">{{ row.k }}{{ row.used ? ' (used)' : '' }}</th>
+                  <td class="num">{{ row.score.toFixed(3) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section class="record-cell" aria-labelledby="ret-etl-heading">
+      <h3 id="ret-etl-heading">Data cleaning (PySpark)</h3>
+      <dl class="counts">
+        <div><dt>Rows loaded</dt><dd>{{ fmt.number(r.metrics.etl.rows_loaded) }}</dd></div>
+        <div><dt>Duplicate rows removed</dt><dd>{{ fmt.number(r.metrics.etl.duplicates_dropped) }}</dd></div>
+        <div><dt>Future-dated rows removed</dt><dd>{{ fmt.number(r.metrics.etl.future_rows_dropped) }}</dd></div>
+        <div class="count-total"><dt>Clean rows</dt><dd>{{ fmt.number(r.metrics.etl.rows_clean) }}</dd></div>
+        <div><dt>Visits</dt><dd>{{ fmt.number(r.metrics.etl.visits_clean) }}</dd></div>
+        <div><dt>Patients</dt><dd>{{ fmt.number(r.metrics.etl.patients_clean) }}</dd></div>
+        <div><dt>Likely duplicate patients</dt><dd>{{ fmt.number(r.metrics.etl.likely_duplicate_patients) }}</dd></div>
+        @if (r.metrics.etl.inconsistent_patient_ids !== undefined) {
+          <div>
+            <dt>Patient IDs with conflicting details</dt>
+            <dd>{{ fmt.number(r.metrics.etl.inconsistent_patient_ids) }}</dd>
+          </div>
+        }
+      </dl>
+    </section>
+  </div>
 }

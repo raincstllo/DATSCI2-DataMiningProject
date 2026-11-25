@@ -41,6 +41,7 @@ function axis(t: ChartTheme, title: string, money = false) {
   selector: 'app-revenue-details',
   imports: [BaseChartDirective],
   templateUrl: './revenue-details.html',
+  styleUrl: './analysis.css',
 })
 export class RevenueDetails {
   private readonly themes = inject(ChartThemeService);
@@ -112,6 +113,7 @@ export class RevenueDetails {
       maintainAspectRatio: false,
       animation: t.reducedMotion ? false : { duration: 400 },
       interaction: { mode: 'index', intersect: false },
+      layout: { padding: { right: 12 } },
       scales: {
         x: { ...axis(t, 'Held-out month'), grid: { display: false } },
         y: { ...axis(t, 'Revenue', true), min: 0 },
@@ -145,7 +147,6 @@ export class RevenueDetails {
           label: 'Forecast revenue',
           data: rows.map((s) => s.forecast_revenue),
           backgroundColor: t.accent,
-          borderRadius: 4,
           borderSkipped: 'start',
           maxBarThickness: 24,
         },
@@ -160,9 +161,23 @@ export class RevenueDetails {
       responsive: true,
       maintainAspectRatio: false,
       animation: t.reducedMotion ? false : { duration: 400 },
+      layout: { padding: { right: 20 } },
       scales: {
         x: { ...axis(t, 'Forecast revenue', true), min: 0 },
-        y: { ticks: { color: t.text }, grid: { display: false }, border: { color: t.axis } },
+        y: {
+          ticks: {
+            color: t.text,
+            // On phone-width charts, break long service names onto two lines.
+            callback(value) {
+              const name = this.getLabelForValue(Number(value));
+              if (this.chart.width >= 420 || name.length <= 16) return name;
+              const cut = name.lastIndexOf(' ', 16);
+              return cut > 0 ? [name.slice(0, cut), name.slice(cut + 1)] : name;
+            },
+          },
+          grid: { display: false },
+          border: { color: t.axis },
+        },
       },
       plugins: {
         legend: { display: false },
@@ -198,7 +213,6 @@ export class RevenueDetails {
           label: 'Importance',
           data: rows.map((f) => f.importance),
           backgroundColor: t.accent,
-          borderRadius: 4,
           borderSkipped: 'start',
           maxBarThickness: 24,
         },

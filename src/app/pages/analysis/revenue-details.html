@@ -1,242 +1,287 @@
 @switch (state().status) {
+  @case ('loading') {
+    @if (!result()) {
+      <p class="record-note" role="status">Loading…</p>
+    }
+  }
   @case ('empty') {
-    <p class="alert">No revenue results yet. Use <strong>Run analysis</strong> above.</p>
+    <p class="record-note">
+      <span class="mark mark-expected" aria-hidden="true"></span>
+      <span>No revenue results yet. Use <strong>Run analysis</strong> above.</span>
+    </p>
   }
   @case ('error') {
-    <p class="alert alert-error" role="alert">The revenue results could not be loaded.</p>
+    <p class="record-note record-note-error" role="alert">
+      <span class="mark mark-attention" aria-hidden="true"></span>
+      <span>The revenue results could not be loaded.</span>
+    </p>
   }
 }
 
 @if (result(); as r) {
-  <p class="muted meta">
+  <p class="result-meta">
     Results from {{ fmt.dateTime(r.generated_at) }}, using complete months up to
     {{ fmt.monthLong(r.payload.last_complete_month) }}.
   </p>
 
-  <!-- Forecast accuracy -->
-  <section class="card" aria-labelledby="rev-eval-heading">
-    <h3 id="rev-eval-heading">Forecast accuracy on held-out months</h3>
-    <p class="muted small">
-      {{ r.metrics.forecast.split }}. The model trained on {{ r.metrics.forecast.revenue.train_months }}
-      months and never saw the {{ r.metrics.forecast.revenue.test_months }} test months. It is compared
-      with two simple baselines: repeating last month, and each service's training average. Lower
-      error is better.
+  <h3 id="rev-figures-heading" class="visually-hidden">Model evaluation</h3>
+  <ul class="figures" aria-labelledby="rev-figures-heading">
+    <li class="fig fig-lead">
+      <p class="fig-label"><span class="mark" aria-hidden="true"></span>Random Forest average error (MAE)</p>
+      <p class="fig-value">
+        {{ fmt.peso(r.metrics.forecast.revenue.monthly_total.random_forest.mae) }}
+        <span class="fig-unit">per month</span>
+      </p>
+      <p class="fig-note">Monthly revenue, held-out months. Lower is better.</p>
+    </li>
+    <li class="fig">
+      <p class="fig-label"><span class="mark" aria-hidden="true"></span>Random Forest RMSE</p>
+      <p class="fig-value">{{ fmt.peso(r.metrics.forecast.revenue.monthly_total.random_forest.rmse) }}</p>
+      <p class="fig-note">Monthly revenue, held-out months. Large misses count more.</p>
+    </li>
+    <li class="fig">
+      <p class="fig-label"><span class="mark" aria-hidden="true"></span>Months trained / tested</p>
+      <p class="fig-value">
+        {{ r.metrics.forecast.revenue.train_months }} / {{ r.metrics.forecast.revenue.test_months }}
+      </p>
+      <p class="fig-note">{{ r.metrics.forecast.split }}.</p>
+    </li>
+    <li class="fig">
+      <p class="fig-label"><span class="mark" aria-hidden="true"></span>Rules with lift above 1</p>
+      <p class="fig-value">{{ fmt.number(r.metrics.rules.rules) }}</p>
+      <p class="fig-note">
+        {{ r.metrics.rules.algorithm }} on {{ fmt.number(r.metrics.rules.baskets) }} patient histories.
+      </p>
+    </li>
+  </ul>
+
+  @if (verdict(); as v) {
+    <p class="record-note">
+      <span class="mark mark-expected" aria-hidden="true"></span>
+      <span>{{ v.text }}</span>
     </p>
-    @if (verdict(); as v) {
-      <p class="alert">{{ v.text }}</p>
-    }
+  }
 
-    <div class="chart-box">
-      <canvas
-        baseChart
-        type="line"
-        role="img"
-        [attr.aria-label]="checkLabel()"
-        [data]="checkData()"
-        [options]="checkOptions()"
-      ></canvas>
-    </div>
-    <details>
-      <summary>Show data table</summary>
-      <div class="table-wrap" tabindex="0" role="region" aria-label="Held-out months table">
-        <table>
-          <caption class="visually-hidden">Actual and predicted revenue on held-out months</caption>
-          <thead>
-            <tr>
-              <th scope="col">Month</th>
-              <th scope="col" class="num">Actual</th>
-              <th scope="col" class="num">Random Forest</th>
-              <th scope="col" class="num">Last-month baseline</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of r.payload.test_check; track row.month) {
-              <tr>
-                <th scope="row">{{ fmt.month(row.month) }}</th>
-                <td class="num">{{ fmt.peso(row.actual) }}</td>
-                <td class="num">{{ fmt.peso(row.random_forest) }}</td>
-                <td class="num">{{ fmt.peso(row.last_month) }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+  <div class="sheet">
+    <!-- Forecast accuracy -->
+    <section class="record-cell wide" aria-labelledby="rev-eval-heading">
+      <h3 id="rev-eval-heading">Forecast accuracy on held-out months</h3>
+      <p class="cell-note">
+        {{ r.metrics.forecast.split }}. The model trained on {{ r.metrics.forecast.revenue.train_months }}
+        months and never saw the {{ r.metrics.forecast.revenue.test_months }} test months. It is compared
+        with two simple baselines: repeating last month, and each service's training average. Lower
+        error is better.
+      </p>
+
+      <div class="chart-box chart-check">
+        <canvas
+          baseChart
+          type="line"
+          role="img"
+          [attr.aria-label]="checkLabel()"
+          [data]="checkData()"
+          [options]="checkOptions()"
+        ></canvas>
       </div>
-    </details>
-
-    <div class="table-wrap" tabindex="0" role="region" aria-label="Forecast error table">
-      <table>
-        <caption>Average error (MAE) and RMSE, held-out months</caption>
-        <thead>
-          <tr>
-            <th scope="col">Approach</th>
-            <th scope="col" class="num">Monthly revenue MAE</th>
-            <th scope="col" class="num">Monthly revenue RMSE</th>
-            <th scope="col" class="num">Per-service revenue MAE</th>
-            <th scope="col" class="num">Per-service cases MAE</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (k of modelKeys; track k) {
-            <tr>
-              <th scope="row">
-                {{ modelNames[k] }}
-                @if (verdict()?.best === k) {
-                  <span class="badge">best</span>
-                }
-              </th>
-              <td class="num">{{ fmt.peso(r.metrics.forecast.revenue.monthly_total[k].mae) }}</td>
-              <td class="num">{{ fmt.peso(r.metrics.forecast.revenue.monthly_total[k].rmse) }}</td>
-              <td class="num">{{ fmt.peso(r.metrics.forecast.revenue.per_service[k].mae) }}</td>
-              <td class="num">{{ r.metrics.forecast.cases.per_service[k].mae.toFixed(2) }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- Features + settings -->
-  <section class="card" aria-labelledby="rev-model-heading">
-    <h3 id="rev-model-heading">Model and settings</h3>
-    <div class="eval-grid">
-      <div>
-        <h4>What the model relies on</h4>
-        <div class="chart-box">
-          <canvas
-            baseChart
-            type="bar"
-            role="img"
-            [attr.aria-label]="importanceLabel()"
-            [data]="importanceData()"
-            [options]="importanceOptions()"
-          ></canvas>
-        </div>
-        <details>
-          <summary>Show data table</summary>
-          <div class="table-wrap" tabindex="0" role="region" aria-label="Feature importance table">
-            <table>
-              <caption class="visually-hidden">Feature importance</caption>
-              <thead>
+      <details>
+        <summary>Show data table</summary>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Held-out months table">
+          <table>
+            <caption class="visually-hidden">Actual and predicted revenue on held-out months</caption>
+            <thead>
+              <tr>
+                <th scope="col">Month</th>
+                <th scope="col" class="num">Actual</th>
+                <th scope="col" class="num">Random Forest</th>
+                <th scope="col" class="num">Last-month baseline</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of r.payload.test_check; track row.month) {
                 <tr>
-                  <th scope="col">Feature</th>
-                  <th scope="col" class="num">Importance</th>
+                  <th scope="row">{{ fmt.month(row.month) }}</th>
+                  <td class="num">{{ fmt.peso(row.actual) }}</td>
+                  <td class="num">{{ fmt.peso(row.random_forest) }}</td>
+                  <td class="num">{{ fmt.peso(row.last_month) }}</td>
                 </tr>
-              </thead>
-              <tbody>
-                @for (f of r.payload.feature_importance; track f.feature) {
-                  <tr>
-                    <th scope="row">{{ f.feature }}</th>
-                    <td class="num">{{ fmt.percent(f.importance) }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </details>
-      </div>
-      <div>
-        <h4>Settings and data</h4>
-        <dl class="stats">
-          <div><dt>Forecast model</dt><dd>{{ r.metrics.forecast.algorithm }}</dd></div>
-          <div><dt>Training rows</dt><dd>{{ fmt.number(r.metrics.forecast.revenue.train_rows) }} (service × month)</dd></div>
-          <div><dt>Forecast horizon</dt><dd>{{ r.metrics.forecast.horizon_months }} months</dd></div>
-          <div><dt>Rules algorithm</dt><dd>{{ r.metrics.rules.algorithm }}</dd></div>
-          <div><dt>Baskets</dt><dd>{{ fmt.number(r.metrics.rules.baskets) }} patient histories</dd></div>
-          <div><dt>Minimum support</dt><dd>{{ fmt.percent(r.metrics.rules.min_support) }}</dd></div>
-          <div><dt>Minimum confidence</dt><dd>{{ fmt.percent(r.metrics.rules.min_confidence) }}</dd></div>
-          <div><dt>Frequent itemsets</dt><dd>{{ fmt.number(r.metrics.rules.itemsets) }}</dd></div>
-          <div><dt>Rules with lift above 1</dt><dd>{{ fmt.number(r.metrics.rules.rules) }}</dd></div>
-          <div><dt>Rows after cleaning</dt><dd>{{ fmt.number(r.metrics.etl.rows_clean) }} of {{ fmt.number(r.metrics.etl.rows_loaded) }}</dd></div>
-        </dl>
-      </div>
-    </div>
-  </section>
+              }
+            </tbody>
+          </table>
+        </div>
+      </details>
 
-  <!-- Full service demand -->
-  <section class="card" aria-labelledby="rev-services-heading">
-    <h3 id="rev-services-heading">
-      Service demand forecast, {{ nextMonth() ? fmt.monthLong(nextMonth()!.month) : 'next month' }}
-    </h3>
-    <div class="chart-box chart-services">
-      <canvas
-        baseChart
-        type="bar"
-        role="img"
-        [attr.aria-label]="servicesLabel()"
-        [data]="servicesData()"
-        [options]="servicesOptions()"
-      ></canvas>
-    </div>
-    <details>
-      <summary>Show data table</summary>
-      <div class="table-wrap" tabindex="0" role="region" aria-label="Service demand table">
+      <h4 id="rev-error-heading">Average error (MAE) and RMSE, held-out months</h4>
+      <div class="table-wrap" tabindex="0" role="region" aria-labelledby="rev-error-heading">
         <table>
-          <caption class="visually-hidden">Service demand forecast</caption>
+          <caption class="visually-hidden">Average error (MAE) and RMSE, held-out months</caption>
           <thead>
             <tr>
-              <th scope="col">Service</th>
-              <th scope="col" class="num">Last month revenue</th>
-              <th scope="col" class="num">Last month cases</th>
-              <th scope="col" class="num">Forecast revenue</th>
-              <th scope="col" class="num">Forecast cases</th>
-              <th scope="col" class="num">Change</th>
+              <th scope="col">Approach</th>
+              <th scope="col" class="num">Monthly revenue MAE</th>
+              <th scope="col" class="num">Monthly revenue RMSE</th>
+              <th scope="col" class="num">Per-service revenue MAE</th>
+              <th scope="col" class="num">Per-service cases MAE</th>
             </tr>
           </thead>
           <tbody>
-            @for (s of r.payload.services; track s.service) {
+            @for (k of modelKeys; track k) {
               <tr>
-                <th scope="row">{{ s.service }}</th>
-                <td class="num">{{ fmt.peso(s.last_month_revenue) }}</td>
-                <td class="num">{{ s.last_month_cases }}</td>
-                <td class="num">{{ fmt.peso(s.forecast_revenue) }}</td>
-                <td class="num">{{ s.forecast_cases }}</td>
-                <td class="num">{{ fmt.change(s.change) }}</td>
+                <th scope="row">
+                  {{ modelNames[k] }}
+                  @if (verdict()?.best === k) {
+                    <span class="best-tag">best</span>
+                  }
+                </th>
+                <td class="num">{{ fmt.peso(r.metrics.forecast.revenue.monthly_total[k].mae) }}</td>
+                <td class="num">{{ fmt.peso(r.metrics.forecast.revenue.monthly_total[k].rmse) }}</td>
+                <td class="num">{{ fmt.peso(r.metrics.forecast.revenue.per_service[k].mae) }}</td>
+                <td class="num">{{ r.metrics.forecast.cases.per_service[k].mae.toFixed(2) }}</td>
               </tr>
             }
           </tbody>
         </table>
       </div>
-    </details>
-  </section>
+    </section>
 
-  <!-- All rules -->
-  <section class="card" aria-labelledby="rev-rules-heading">
-    <h3 id="rev-rules-heading">All association rules (Apriori)</h3>
-    <p class="muted small">
-      Baskets are each patient's full service history. Support = share of patients with both;
-      confidence = share of patients with the first who also had the second; lift above 1 = more often
-      than chance.
-    </p>
-    @if (r.payload.rules.length) {
-      <div class="table-wrap" tabindex="0" role="region" aria-label="Association rules table">
-        <table>
-          <caption class="visually-hidden">Association rules, strongest first</caption>
-          <thead>
-            <tr>
-              <th scope="col">If</th>
-              <th scope="col">Then</th>
-              <th scope="col" class="num">Support</th>
-              <th scope="col" class="num">Confidence</th>
-              <th scope="col" class="num">Lift</th>
-              <th scope="col" class="num">Patients</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (rule of r.payload.rules; track $index) {
-              <tr>
-                <th scope="row">{{ rule.if.join(' + ') }}</th>
-                <td>{{ rule.then.join(' + ') }}</td>
-                <td class="num">{{ fmt.percent(rule.support) }}</td>
-                <td class="num">{{ fmt.percent(rule.confidence) }}</td>
-                <td class="num">{{ rule.lift.toFixed(2) }}</td>
-                <td class="num">{{ rule.patients }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+    <!-- Features + settings -->
+    <section class="record-cell" aria-labelledby="rev-model-heading">
+      <h3 id="rev-model-heading">What the model relies on</h3>
+      <div class="chart-box chart-importance">
+        <canvas
+          baseChart
+          type="bar"
+          role="img"
+          [attr.aria-label]="importanceLabel()"
+          [data]="importanceData()"
+          [options]="importanceOptions()"
+        ></canvas>
       </div>
-    } @else {
-      <p class="alert">No rule passed the thresholds.</p>
-    }
-  </section>
+      <details>
+        <summary>Show data table</summary>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Feature importance table">
+          <table>
+            <caption class="visually-hidden">Feature importance</caption>
+            <thead>
+              <tr>
+                <th scope="col">Feature</th>
+                <th scope="col" class="num">Importance</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of r.payload.feature_importance; track f.feature) {
+                <tr>
+                  <th scope="row">{{ f.feature }}</th>
+                  <td class="num">{{ fmt.percent(f.importance) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section class="record-cell" aria-labelledby="rev-settings-heading">
+      <h3 id="rev-settings-heading">Settings and data</h3>
+      <dl class="counts">
+        <div><dt>Forecast model</dt><dd>{{ r.metrics.forecast.algorithm }}</dd></div>
+        <div><dt>Training rows</dt><dd>{{ fmt.number(r.metrics.forecast.revenue.train_rows) }} (service × month)</dd></div>
+        <div><dt>Forecast horizon</dt><dd>{{ r.metrics.forecast.horizon_months }} months</dd></div>
+        <div><dt>Rules algorithm</dt><dd>{{ r.metrics.rules.algorithm }}</dd></div>
+        <div><dt>Baskets</dt><dd>{{ fmt.number(r.metrics.rules.baskets) }} patient histories</dd></div>
+        <div><dt>Minimum support</dt><dd>{{ fmt.percent(r.metrics.rules.min_support) }}</dd></div>
+        <div><dt>Minimum confidence</dt><dd>{{ fmt.percent(r.metrics.rules.min_confidence) }}</dd></div>
+        <div><dt>Frequent itemsets</dt><dd>{{ fmt.number(r.metrics.rules.itemsets) }}</dd></div>
+        <div><dt>Rules with lift above 1</dt><dd>{{ fmt.number(r.metrics.rules.rules) }}</dd></div>
+        <div><dt>Rows after cleaning</dt><dd>{{ fmt.number(r.metrics.etl.rows_clean) }} of {{ fmt.number(r.metrics.etl.rows_loaded) }}</dd></div>
+      </dl>
+    </section>
+
+    <!-- Full service demand -->
+    <section class="record-cell wide" aria-labelledby="rev-services-heading">
+      <h3 id="rev-services-heading">
+        Service demand forecast, {{ nextMonth() ? fmt.monthLong(nextMonth()!.month) : 'next month' }}
+      </h3>
+      <div class="chart-box chart-services">
+        <canvas
+          baseChart
+          type="bar"
+          role="img"
+          [attr.aria-label]="servicesLabel()"
+          [data]="servicesData()"
+          [options]="servicesOptions()"
+        ></canvas>
+      </div>
+      <details>
+        <summary>Show data table</summary>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Service demand table">
+          <table>
+            <caption class="visually-hidden">Service demand forecast</caption>
+            <thead>
+              <tr>
+                <th scope="col">Service</th>
+                <th scope="col" class="num">Last month revenue</th>
+                <th scope="col" class="num">Last month cases</th>
+                <th scope="col" class="num">Forecast revenue</th>
+                <th scope="col" class="num">Forecast cases</th>
+                <th scope="col" class="num">Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of r.payload.services; track s.service) {
+                <tr>
+                  <th scope="row">{{ s.service }}</th>
+                  <td class="num">{{ fmt.peso(s.last_month_revenue) }}</td>
+                  <td class="num">{{ s.last_month_cases }}</td>
+                  <td class="num">{{ fmt.peso(s.forecast_revenue) }}</td>
+                  <td class="num">{{ s.forecast_cases }}</td>
+                  <td class="num">{{ fmt.change(s.change) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <!-- All rules -->
+    <section class="record-cell wide" aria-labelledby="rev-rules-heading">
+      <h3 id="rev-rules-heading">All association rules (Apriori)</h3>
+      <p class="cell-note">
+        Baskets are each patient's full service history. Support = share of patients with both;
+        confidence = share of patients with the first who also had the second; lift above 1 = more often
+        than chance.
+      </p>
+      @if (r.payload.rules.length) {
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Association rules table">
+          <table>
+            <caption class="visually-hidden">Association rules, strongest first</caption>
+            <thead>
+              <tr>
+                <th scope="col">If</th>
+                <th scope="col">Then</th>
+                <th scope="col" class="num">Support</th>
+                <th scope="col" class="num">Confidence</th>
+                <th scope="col" class="num">Lift</th>
+                <th scope="col" class="num">Patients</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (rule of r.payload.rules; track $index) {
+                <tr>
+                  <th scope="row">{{ rule.if.join(' + ') }}</th>
+                  <td>{{ rule.then.join(' + ') }}</td>
+                  <td class="num">{{ fmt.percent(rule.support) }}</td>
+                  <td class="num">{{ fmt.percent(rule.confidence) }}</td>
+                  <td class="num">{{ rule.lift.toFixed(2) }}</td>
+                  <td class="num">{{ rule.patients }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="list-note">No rule passed the thresholds.</p>
+      }
+    </section>
+  </div>
 }

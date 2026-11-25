@@ -14,6 +14,7 @@ const SEGMENTS: SegmentName[] = ['Frequent', 'Infrequent', 'Inactive'];
   selector: 'app-retention-details',
   imports: [BaseChartDirective],
   templateUrl: './retention-details.html',
+  styleUrl: './analysis.css',
 })
 export class RetentionDetails {
   private readonly themes = inject(ChartThemeService);
@@ -61,6 +62,7 @@ export class RetentionDetails {
       responsive: true,
       maintainAspectRatio: false,
       animation: t.reducedMotion ? false : { duration: 400 },
+      layout: { padding: { right: 12 } },
       scales: {
         x: { ...axis('Days since last visit'), min: 0 },
         y: {
@@ -116,7 +118,6 @@ export class RetentionDetails {
           label: 'Silhouette score',
           data: rows.map((r) => r.score),
           backgroundColor: t.accent,
-          borderRadius: { topLeft: 4, topRight: 4 },
           borderSkipped: 'start',
           maxBarThickness: 24,
         },
