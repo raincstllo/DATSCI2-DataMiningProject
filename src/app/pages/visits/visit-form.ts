@@ -62,7 +62,10 @@ export class VisitForm implements OnInit {
 
   constructor() {
     this.addRow();
-    this.form.valueChanges.subscribe(() => this.total.set(this.computeTotal()));
+    this.form.valueChanges.subscribe(() => {
+      this.total.set(this.computeTotal());
+      this.dropFixedErrors();
+    });
     inject(DestroyRef).onDestroy(() => clearTimeout(this.searchTimer));
   }
 
@@ -118,10 +121,7 @@ export class VisitForm implements OnInit {
     this.results.set([]);
     this.patientQuery.set('');
     this.searchStatus.set('');
-    this.errors.update((e) => {
-      const { patient_id, ...rest } = e;
-      return rest;
-    });
+    this.dropFixedErrors();
     setTimeout(() => document.getElementById('date_visited')?.focus());
   }
 
@@ -217,6 +217,20 @@ export class VisitForm implements OnInit {
       }
     });
     return errors;
+  }
+
+  /**
+   * Removes the messages for fields the owner has since corrected. New problems are not
+   * flagged while typing; they still wait for Save.
+   */
+  private dropFixedErrors(): void {
+    const current = this.errors();
+    if (!Object.keys(current).length) return;
+    const still = this.validate();
+    const kept = Object.fromEntries(Object.entries(current).filter(([path]) => path in still));
+    if (Object.keys(kept).length === Object.keys(current).length) return;
+    this.errors.set(kept);
+    this.summary.update((list) => list.filter((e) => e.field in kept));
   }
 
   /** Shows field errors plus a linked summary; returns true when there were any. */
