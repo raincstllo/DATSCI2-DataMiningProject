@@ -14,6 +14,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/retention/retention').then((m) => m.Retention),
   },
+  {
+    path: 'revenue',
+    title: 'Revenue and services | Dental Clinic Decision Support',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/revenue/revenue').then((m) => m.Revenue),
+  },
   { path: '', pathMatch: 'full', redirectTo: 'retention' },
   { path: '**', redirectTo: 'retention' },
 ];

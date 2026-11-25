@@ -11,6 +11,8 @@ export interface ChartTheme {
   grid: string;
   axis: string;
   segments: Record<SegmentName, string>;
+  /** Categorical slots 1-3 for multi-series charts. */
+  series: [string, string, string];
   accent: string;
   accentMuted: string;
 }
@@ -23,6 +25,7 @@ const LIGHT: Omit<ChartTheme, 'dark' | 'reducedMotion'> = {
   grid: '#e1e0d9',
   axis: '#898781',
   segments: { Frequent: '#2a78d6', Infrequent: '#eb6834', Inactive: '#1baf7a' },
+  series: ['#2a78d6', '#eb6834', '#1baf7a'],
   accent: '#1c5cab',
   accentMuted: '#86b6ef',
 };
@@ -34,6 +37,7 @@ const DARK: Omit<ChartTheme, 'dark' | 'reducedMotion'> = {
   grid: '#2c2c2a',
   axis: '#898781',
   segments: { Frequent: '#3987e5', Infrequent: '#d95926', Inactive: '#199e70' },
+  series: ['#3987e5', '#d95926', '#199e70'],
   accent: '#6da7ec',
   accentMuted: '#184f95',
 };
@@ -44,6 +48,9 @@ export const SEGMENT_SHAPES: Record<SegmentName, PointStyle> = {
   Infrequent: 'triangle',
   Inactive: 'rectRot',
 };
+
+/** Shapes for series 1-3, matching the segment shapes. */
+export const SERIES_SHAPES: [PointStyle, PointStyle, PointStyle] = ['circle', 'triangle', 'rectRot'];
 
 export const SEGMENT_SHAPE_NAMES: Record<SegmentName, string> = {
   Frequent: 'circle',
