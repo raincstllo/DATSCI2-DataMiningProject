@@ -21,9 +21,9 @@ export interface ChartTheme {
 const LIGHT: Omit<ChartTheme, 'dark' | 'reducedMotion'> = {
   surface: '#ffffff',
   text: '#102a33',
-  muted: '#4a5f66',
-  grid: '#e4eef2',
-  axis: '#76909a',
+  muted: '#46606a',
+  grid: '#d5e7ed',
+  axis: '#6c8a95',
   segments: { Frequent: '#2a78d6', Infrequent: '#eb6834', Inactive: '#1baf7a' },
   series: ['#2a78d6', '#eb6834', '#1baf7a'],
   // Brand teal-blue for single-series charts.
@@ -32,14 +32,14 @@ const LIGHT: Omit<ChartTheme, 'dark' | 'reducedMotion'> = {
 };
 
 const DARK: Omit<ChartTheme, 'dark' | 'reducedMotion'> = {
-  surface: '#122126',
-  text: '#e8f1f3',
-  muted: '#a9bfc5',
-  grid: '#223740',
-  axis: '#5f808a',
+  surface: '#0f1f26',
+  text: '#e6f0f3',
+  muted: '#a6bec5',
+  grid: '#1f3a45',
+  axis: '#6f919c',
   segments: { Frequent: '#3987e5', Infrequent: '#d95926', Inactive: '#199e70' },
   series: ['#3987e5', '#d95926', '#199e70'],
-  accent: '#5ec4d9',
+  accent: '#8ccfe3',
   accentMuted: '#1d4250',
 };
 

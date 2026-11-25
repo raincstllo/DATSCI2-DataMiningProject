@@ -18,6 +18,18 @@ import { ResultsStore } from '../../core/results.store';
 import { SEGMENT_LABELS } from '../../core/segments';
 
 const RECENT = 10;
+
+interface MonthRow {
+  month: string;
+  revenue: number;
+  cases: number;
+  /** Expected total for the current month; null for other months. */
+  expected: number | null;
+  /** True when the month is still in progress. */
+  partial: boolean;
+}
+/** FDI tooth numbers for the upper arch, printed across the head of the record card. */
+const UPPER_ARCH = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
 const roundPeso = (n: number): string => formatPeso(Math.round(n / 1000) * 1000);
 
 /** Owner's home page: today's picture at a glance plus the latest visits. */
@@ -34,6 +46,7 @@ export class Home implements OnInit {
   private readonly themes = inject(ChartThemeService);
 
   protected readonly today = todayIso();
+  protected readonly toothNumbers = UPPER_ARCH;
   protected readonly todayText = new Intl.DateTimeFormat('en-PH', { dateStyle: 'full' }).format(new Date());
   protected readonly inactiveLabel = SEGMENT_LABELS.Inactive;
   protected readonly fmt = {
@@ -65,21 +78,66 @@ export class Home implements OnInit {
     () => this.retention().status === 'empty' || this.revenue().status === 'empty',
   );
 
-  protected readonly history = computed(() => (this.revenue().data?.payload.history ?? []).slice(-12));
+  /**
+   * The last 12 months for the chart. When the stored history stops before this month and the
+   * forecast covers this month, this month joins as a partial row: revenue so far plus the
+   * expected total.
+   */
+  protected readonly history = computed<MonthRow[]>(() => {
+    const past = this.revenue().data?.payload.history ?? [];
+    const f = this.thisMonthForecast();
+    const s = this.summary();
+    if (f && s && past.length && !past.some((h) => this.isCurrent(h.month))) {
+      const current: MonthRow = { month: f.month, revenue: s.revenue, cases: s.services, expected: f.revenue, partial: true };
+      return [...past.slice(-11).map((h) => ({ ...h, expected: null, partial: false })), current];
+    }
+    return past.slice(-12).map((h) => ({
+      ...h,
+      expected: f && this.isCurrent(h.month) ? f.revenue : null,
+      partial: false,
+    }));
+  });
+
+  /** This month's expected total, when the chart includes the current month. */
+  protected readonly currentExpected = computed(() => this.history().find((h) => h.expected !== null)?.expected ?? null);
 
   protected readonly chartData = computed<ChartData<'bar'>>(() => {
     const t = this.themes.theme();
     const rows = this.history();
+    const expected = this.currentExpected();
     return {
-      labels: rows.map((h) => formatMonth(h.month)),
+      // Short month names; the year shows on the first bar, each January and the current month.
+      labels: rows.map((h, i) => {
+        const [y, m] = h.month.split('-');
+        const short = new Date(Number(y), Number(m) - 1, 1).toLocaleString('en-PH', { month: 'short' });
+        return i === 0 || m === '01' || i === rows.length - 1 ? [short, y] : short;
+      }),
       datasets: [
+        // Outlined mark: this month's expected total, drawn around the recorded bar.
+        ...(expected === null
+          ? []
+          : [
+              {
+                label: 'Expected',
+                data: rows.map((h) => h.expected),
+                backgroundColor: 'transparent',
+                borderColor: t.accent,
+                borderWidth: 2,
+                borderSkipped: 'start' as const,
+                grouped: false,
+                order: 0,
+                maxBarThickness: 28,
+              },
+            ]),
+        // Filled mark: recorded revenue.
         {
-          label: 'Revenue',
+          label: 'Recorded',
           data: rows.map((h) => h.revenue),
           backgroundColor: t.accent,
-          borderRadius: { topLeft: 4, topRight: 4 },
-          borderSkipped: 'start',
-          maxBarThickness: 24,
+          borderSkipped: 'start' as const,
+          grouped: false,
+          order: 1,
+          maxBarThickness: 28,
         },
       ],
     };
@@ -92,17 +150,34 @@ export class Home implements OnInit {
       maintainAspectRatio: false,
       animation: t.reducedMotion ? false : { duration: 400 },
       scales: {
-        x: { ticks: { color: t.muted }, grid: { display: false }, border: { color: t.axis } },
+        x: {
+          ticks: {
+            color: t.muted,
+            maxRotation: 0,
+            autoSkip: false,
+            // On narrow charts, label every 2nd or 3rd month counting back from the current one.
+            callback(value, index, ticks) {
+              const w = this.chart.width;
+              const step = w < 300 ? 3 : w < 420 ? 2 : 1;
+              return (ticks.length - 1 - index) % step === 0 ? this.getLabelForValue(Number(value)) : '';
+            },
+          },
+          grid: { display: false },
+          border: { color: t.axis },
+        },
         y: {
           min: 0,
-          ticks: { color: t.muted, callback: (v) => formatPesoCompact(Number(v)) },
+          ticks: { color: t.muted, maxTicksLimit: 6, callback: (v) => formatPesoCompact(Number(v)) },
           grid: { color: t.grid },
           border: { display: false },
         },
       },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (item) => formatPeso(Number(item.parsed.y)) } },
+        tooltip: {
+          filter: (item) => item.raw !== null,
+          callbacks: { label: (item) => `${item.dataset.label}: ${formatPeso(Number(item.parsed.y))}` },
+        },
       },
     };
   });
@@ -112,8 +187,11 @@ export class Home implements OnInit {
     if (!rows.length) return '';
     return (
       `Bar chart of revenue per month, ${formatMonth(rows[0].month)} to ${formatMonth(rows[rows.length - 1].month)}: ` +
-      rows.map((h) => `${formatMonth(h.month)} ${formatPeso(h.revenue)}`).join(', ') +
-      '.'
+      rows.map((h) => `${formatMonth(h.month)} ${formatPeso(h.revenue)}${h.partial ? ' so far' : ''}`).join(', ') +
+      '.' +
+      (this.currentExpected() === null
+        ? ''
+        : ` Expected for this month: about ${roundPeso(this.currentExpected()!)}.`)
     );
   });
 
@@ -126,6 +204,16 @@ export class Home implements OnInit {
       next: (page) => this.recent.set(page.items),
       error: (err: unknown) => this.recentError.set(readApiError(err, 'Recent visits could not be loaded.').message),
     });
+  }
+
+  /** Visit date without the year when it falls in the current year, so the totals fit on phones. */
+  protected visitDate(iso: string): string {
+    const full = formatDate(iso);
+    return iso.slice(0, 4) === this.today.slice(0, 4) ? full.replace(/,? \d{4}$/, '') : full;
+  }
+
+  protected isCurrent(month: string): boolean {
+    return month.slice(0, 7) === this.today.slice(0, 7);
   }
 
   protected serviceText(v: Visit): string {
