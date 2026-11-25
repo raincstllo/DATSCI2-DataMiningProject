@@ -7,7 +7,16 @@ const mongoose = require('mongoose');
 const Visit = require('../models/visit');
 
 const DEFAULT_CSV = path.join(__dirname, '..', '..', 'data', 'dental_records_2025_2026.csv');
-const HEADER = ['Visit ID', 'Name', 'Date Visited', 'Nature of Visit', 'Teeth Operated', 'Fee'];
+const HEADER = [
+  'Visit ID',
+  'Patient ID',
+  'Name',
+  'Contact Number',
+  'Date Visited',
+  'Nature of Visit',
+  'Teeth Operated',
+  'Fee',
+];
 const TOOTH = /^([1-9]|[12]\d|3[0-2]|[A-T])$/;
 
 function parseDate(value) {
@@ -36,15 +45,20 @@ function parseCsv(file) {
   lines.slice(1).forEach((line, i) => {
     const row = i + 2; // 1-based, counting the header
     const cells = line.split(',').map((c) => c.trim());
-    if (cells.length !== HEADER.length) return errors.push(`row ${row}: expected 6 fields, got ${cells.length}`);
+    if (cells.length !== HEADER.length) {
+      return errors.push(`row ${row}: expected ${HEADER.length} fields, got ${cells.length}`);
+    }
 
-    const [visitId, name, date, nature, teeth, fee] = cells;
+    const [visitId, patientId, name, contactRaw, date, nature, teeth, fee] = cells;
+    const contact = contactRaw.replace(/[\s-]/g, '');
     const dateVisited = parseDate(date);
     const teethOperated = parseTeeth(teeth);
     const feeNum = Number(fee.replace(/,/g, ''));
 
     if (!/^V\d+$/.test(visitId)) errors.push(`row ${row}: bad Visit ID`);
+    if (!/^P\d+$/.test(patientId)) errors.push(`row ${row}: bad Patient ID`);
     if (!name) errors.push(`row ${row}: empty Name`);
+    if (!/^09\d{9}$/.test(contact)) errors.push(`row ${row}: bad Contact Number (expected 09XXXXXXXXX)`);
     if (!dateVisited) errors.push(`row ${row}: bad Date Visited (expected MM/DD/YYYY)`);
     if (!nature) errors.push(`row ${row}: empty Nature of Visit`);
     if (!teethOperated) errors.push(`row ${row}: bad Teeth Operated`);
@@ -52,7 +66,9 @@ function parseCsv(file) {
 
     docs.push({
       visit_id: visitId,
+      patient_id: patientId,
       name: name.replace(/\s+/g, ' '),
+      contact_number: contact,
       date_visited: dateVisited,
       nature_of_visit: nature,
       teeth_operated: teethOperated,

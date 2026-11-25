@@ -7,12 +7,23 @@ from pyspark.sql import types as T
 
 from .common import get_db, get_spark, log_step
 
-RAW_FIELDS = ['visit_id', 'name', 'date_visited', 'nature_of_visit', 'teeth_operated', 'fee']
+RAW_FIELDS = [
+    'visit_id',
+    'patient_id',
+    'name',
+    'contact_number',
+    'date_visited',
+    'nature_of_visit',
+    'teeth_operated',
+    'fee',
+]
 
 SCHEMA = T.StructType(
     [
         T.StructField('visit_id', T.StringType(), False),
+        T.StructField('patient_id', T.StringType(), False),
         T.StructField('name', T.StringType(), False),
+        T.StructField('contact_number', T.StringType(), False),
         T.StructField('date_visited', T.DateType(), False),
         T.StructField('nature_of_visit', T.StringType(), False),
         T.StructField('teeth_operated', T.ArrayType(T.StringType()), False),
@@ -29,7 +40,9 @@ def extract():
         rows.append(
             (
                 doc['visit_id'],
+                doc['patient_id'],
                 doc['name'],
+                doc['contact_number'],
                 doc['date_visited'].date(),
                 doc['nature_of_visit'],
                 list(doc.get('teeth_operated') or []),
@@ -60,14 +73,26 @@ def run_etl(as_of=None):
     report['future_rows_dropped'] = deduped.count() - past.count()
     log_step('drop_future_dates', dropped=report['future_rows_dropped'], cutoff=as_of)
 
-    # No patient ID exists yet: identify a patient by normalized name.
-    clean = past.withColumn(
-        'patient_key', F.lower(F.regexp_replace(F.trim('name'), r'\s+', ' '))
-    )
+    clean = past.withColumn('patient_key', F.col('patient_id'))
 
-    # Likely duplicates: the same normalized name written in more than one way.
-    spellings = clean.groupBy('patient_key').agg(F.countDistinct('name').alias('n'))
-    report['likely_duplicate_patients'] = spellings.filter('n > 1').count()
+    # Likely duplicates: different patient IDs with the same normalized name and number.
+    person = clean.withColumn(
+        'person', F.concat_ws('|', F.lower(F.regexp_replace(F.trim('name'), r'\s+', ' ')),
+                              F.col('contact_number'))
+    )
+    report['likely_duplicate_patients'] = (
+        person.groupBy('person')
+        .agg(F.countDistinct('patient_id').alias('ids'))
+        .filter('ids > 1')
+        .count()
+    )
+    # One patient ID recorded with different names or numbers.
+    report['inconsistent_patient_ids'] = (
+        clean.groupBy('patient_id')
+        .agg(F.countDistinct('name', 'contact_number').alias('n'))
+        .filter('n > 1')
+        .count()
+    )
 
     clean = clean.repartition(4, 'patient_key').cache()  # Unit: distributed processing
     report['rows_clean'] = clean.count()
@@ -79,6 +104,7 @@ def run_etl(as_of=None):
         visits=report['visits_clean'],
         patients=report['patients_clean'],
         likely_duplicate_patients=report['likely_duplicate_patients'],
+        inconsistent_patient_ids=report['inconsistent_patient_ids'],
     )
     return clean, report
 

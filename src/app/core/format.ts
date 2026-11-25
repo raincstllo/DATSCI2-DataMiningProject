@@ -16,6 +16,9 @@ const dateTimeFmt = new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium', time
 export const formatPeso = (n: number): string => peso.format(n);
 export const formatPesoCompact = (n: number): string => pesoCompact.format(n);
 export const formatNumber = (n: number): string => whole.format(n);
+/** 09171234567 -> 0917 123 4567 */
+export const formatPhone = (n: string): string =>
+  /^\d{11}$/.test(n) ? `${n.slice(0, 4)} ${n.slice(4, 7)} ${n.slice(7)}` : n;
 export const formatPercent = (share: number): string => `${Math.round(share * 100)}%`;
 /** For calendar dates stored as UTC midnight (visit dates). */
 export const formatDate = (iso: string): string => dateFmt.format(new Date(iso));

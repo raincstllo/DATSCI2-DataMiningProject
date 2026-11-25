@@ -174,7 +174,7 @@
             </select>
           </div>
           <div class="field">
-            <label for="name-search">Search by name</label>
+            <label for="name-search">Search by name, patient ID or number</label>
             <input
               id="name-search"
               type="search"
@@ -203,6 +203,8 @@
             <thead>
               <tr>
                 <th scope="col">Name</th>
+                <th scope="col">Patient ID</th>
+                <th scope="col">Contact number</th>
                 <th scope="col">Segment</th>
                 <th scope="col">Last visit</th>
                 <th scope="col" class="num">Days since</th>
@@ -211,9 +213,15 @@
               </tr>
             </thead>
             <tbody>
-              @for (p of pageRows(); track p.name) {
+              @for (p of pageRows(); track p.patient_id || p.name) {
                 <tr>
                   <th scope="row">{{ p.name }}</th>
+                  <td>{{ p.patient_id }}</td>
+                  <td>
+                    @if (p.contact_number) {
+                      <a [href]="'tel:' + p.contact_number">{{ fmt.phone(p.contact_number) }}</a>
+                    }
+                  </td>
                   <td>
                     <span class="seg-cell">
                       <span class="shape shape-{{ p.segment }}" aria-hidden="true"></span>
@@ -307,6 +315,16 @@
                 <dt>Patients</dt>
                 <dd>{{ fmt.number(r.metrics.etl.patients_clean) }}</dd>
               </div>
+              <div>
+                <dt>Likely duplicate patients</dt>
+                <dd>{{ fmt.number(r.metrics.etl.likely_duplicate_patients) }}</dd>
+              </div>
+              @if (r.metrics.etl.inconsistent_patient_ids !== undefined) {
+                <div>
+                  <dt>Patient IDs with conflicting details</dt>
+                  <dd>{{ fmt.number(r.metrics.etl.inconsistent_patient_ids) }}</dd>
+                </div>
+              }
             </dl>
           </div>
 

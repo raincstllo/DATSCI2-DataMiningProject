@@ -26,10 +26,11 @@ STRATEGIES = {
 def build_features(clean, as_of):
     """One row per patient, built with Spark aggregations (Unit: Spark SQL / ETL).
 
-    Name is carried only as a label for the owner's follow-up list, never as a feature.
+    Name and contact number are carried only for the owner's follow-up list, never as features.
     """
     per_patient = clean.groupBy('patient_key').agg(
         F.first('name').alias('name'),
+        F.first('contact_number').alias('contact_number'),
         F.max('date_visited').alias('last_visit'),
         F.min('date_visited').alias('first_visit'),
         F.countDistinct('visit_id').alias('frequency'),
@@ -88,7 +89,9 @@ def run_retention(clean, etl_report, as_of):
 
     patients = [
         {
+            'patient_id': r.patient_key,
             'name': r.name,
+            'contact_number': r.contact_number,
             'segment': r.segment,
             'last_visit': r.last_visit.isoformat(),
             'visits': int(r.frequency),

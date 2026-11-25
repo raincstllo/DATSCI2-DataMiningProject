@@ -18,6 +18,7 @@ import {
   formatPercent,
   formatPeso,
   formatPesoCompact,
+  formatPhone,
 } from '../../core/format';
 
 type LoadState = 'loading' | 'empty' | 'ready' | 'error';
@@ -68,6 +69,7 @@ export class Retention implements OnInit {
   protected readonly shapeNames = SEGMENT_SHAPE_NAMES;
   protected readonly fmt = {
     peso: formatPeso,
+    phone: formatPhone,
     number: formatNumber,
     percent: formatPercent,
     date: formatDate,
@@ -111,9 +113,13 @@ export class Retention implements OnInit {
     const patients = this.result()?.payload.patients ?? [];
     const seg = this.segmentFilter();
     const q = this.search().trim().toLowerCase();
-    const rows = patients.filter(
-      (p) => (seg === 'all' || p.segment === seg) && (!q || p.name.toLowerCase().includes(q)),
-    );
+    const digits = q.replace(/\D/g, '');
+    const matches = (p: RetentionPatient) =>
+      !q ||
+      p.name.toLowerCase().includes(q) ||
+      (p.patient_id ?? '').toLowerCase().includes(q) ||
+      (digits.length >= 3 && (p.contact_number ?? '').includes(digits));
+    const rows = patients.filter((p) => (seg === 'all' || p.segment === seg) && matches(p));
     const by: Record<SortKey, (a: RetentionPatient, b: RetentionPatient) => number> = {
       recency: (a, b) => b.recency_days - a.recency_days,
       spend: (a, b) => b.total_fee - a.total_fee,

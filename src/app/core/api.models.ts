@@ -40,7 +40,9 @@ export interface RetentionSegment {
 }
 
 export interface RetentionPatient {
+  patient_id: string;
   name: string;
+  contact_number: string;
   segment: SegmentName;
   last_visit: string;
   visits: number;
@@ -54,6 +56,7 @@ export interface EtlReport {
   duplicates_dropped: number;
   future_rows_dropped: number;
   likely_duplicate_patients: number;
+  inconsistent_patient_ids?: number;
   rows_clean: number;
   visits_clean: number;
   patients_clean: number;
