@@ -19,27 +19,28 @@ export interface ChartTheme {
 
 // Categorical slots 1-3, validated all-pairs for colour-vision deficiency in both modes.
 const LIGHT: Omit<ChartTheme, 'dark' | 'reducedMotion'> = {
-  surface: '#fcfcfb',
-  text: '#0b0b0b',
-  muted: '#52514e',
-  grid: '#e1e0d9',
-  axis: '#898781',
+  surface: '#ffffff',
+  text: '#102a33',
+  muted: '#4a5f66',
+  grid: '#e4eef2',
+  axis: '#76909a',
   segments: { Frequent: '#2a78d6', Infrequent: '#eb6834', Inactive: '#1baf7a' },
   series: ['#2a78d6', '#eb6834', '#1baf7a'],
-  accent: '#1c5cab',
-  accentMuted: '#86b6ef',
+  // Brand teal-blue for single-series charts.
+  accent: '#0b5c73',
+  accentMuted: '#9fd2e0',
 };
 
 const DARK: Omit<ChartTheme, 'dark' | 'reducedMotion'> = {
-  surface: '#1a1a19',
-  text: '#f0efec',
-  muted: '#c3c2b7',
-  grid: '#2c2c2a',
-  axis: '#898781',
+  surface: '#122126',
+  text: '#e8f1f3',
+  muted: '#a9bfc5',
+  grid: '#223740',
+  axis: '#5f808a',
   segments: { Frequent: '#3987e5', Infrequent: '#d95926', Inactive: '#199e70' },
   series: ['#3987e5', '#d95926', '#199e70'],
-  accent: '#6da7ec',
-  accentMuted: '#184f95',
+  accent: '#5ec4d9',
+  accentMuted: '#1d4250',
 };
 
 /** Shape per segment so identity never depends on colour alone. */

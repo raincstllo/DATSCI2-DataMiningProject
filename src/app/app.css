@@ -1,6 +1,6 @@
 .site-header {
   background: var(--surface);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 3px solid var(--sky-strong);
 }
 
 .header-inner {
@@ -14,9 +14,20 @@
 }
 
 .brand {
-  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.5rem;
   font-weight: 700;
   font-size: 1.1rem;
+  color: var(--heading);
+  text-decoration: none;
+}
+
+.logo {
+  height: 40px;
+  width: auto;
+  border-radius: 6px;
 }
 
 nav {
@@ -44,10 +55,12 @@ nav a {
 }
 
 nav a:hover {
-  background: var(--info-bg);
+  background: var(--sky);
 }
 
 nav a.active {
+  background: var(--sky);
+  color: var(--heading);
   text-decoration: underline;
   text-decoration-thickness: 3px;
   text-underline-offset: 6px;

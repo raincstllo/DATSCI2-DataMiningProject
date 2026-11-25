@@ -16,6 +16,7 @@ export class Login {
   private readonly errorBox = viewChild<ElementRef<HTMLElement>>('errorBox');
 
   protected readonly expired = inject(ActivatedRoute).snapshot.queryParamMap.has('expired');
+  protected readonly logoMissing = signal(false);
   protected readonly submitting = signal(false);
   protected readonly submitted = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -41,7 +42,7 @@ export class Login {
     this.submitting.set(true);
     const { username, password } = this.form.getRawValue();
     this.auth.login(username, password).subscribe({
-      next: () => this.router.navigate(['/retention']),
+      next: () => this.router.navigate(['/']),
       error: (err: unknown) => {
         this.submitting.set(false);
         this.form.controls.password.reset();

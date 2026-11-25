@@ -1,48 +1,61 @@
+/*
+ * Brand: deep teal-blue (primary: headings, buttons, key accents), pale sky-blue
+ * (highlights, dividers, secondary containers) and an off-white clinical background.
+ * Every text pair meets WCAG AA (4.5:1) and UI borders meet 3:1, in both modes.
+ */
 :root {
   color-scheme: light;
-  --page: #f9f9f7;
-  --surface: #fcfcfb;
+  --page: #f6f9fa;
+  --surface: #ffffff;
   --surface-raised: #ffffff;
-  --text: #0b0b0b;
-  --text-secondary: #52514e;
-  --border: #c3c2b7;
-  --border-subtle: #e1e0d9;
-  --accent: #1c5cab;
+  --sky: #e4f2f7;
+  --sky-strong: #cfe7f0;
+  --text: #102a33;
+  --text-secondary: #4a5f66;
+  --heading: #0b5c73;
+  --border: #76909a;
+  --border-subtle: #d9e8ee;
+  --accent: #0b5c73;
   --accent-text: #ffffff;
-  --accent-hover: #184f95;
-  --focus: #1c5cab;
+  --accent-hover: #084a5d;
+  --focus: #0b5c73;
   --danger: #b42828;
   --danger-bg: #fdf0f0;
-  --success: #006300;
-  --info-bg: #eef4fc;
+  --success: #1d6b33;
+  --info-bg: #e4f2f7;
   --seg-frequent: #2a78d6;
   --seg-infrequent: #eb6834;
   --seg-inactive: #1baf7a;
-  --radius: 8px;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgb(16 42 51 / 0.06), 0 2px 8px rgb(16 42 51 / 0.04);
   --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --page: #0d0d0d;
-    --surface: #1a1a19;
-    --surface-raised: #222221;
-    --text: #f0efec;
-    --text-secondary: #c3c2b7;
-    --border: #5c5b56;
-    --border-subtle: #2c2c2a;
-    --accent: #6da7ec;
-    --accent-text: #0b0b0b;
-    --accent-hover: #86b6ef;
-    --focus: #86b6ef;
+    --page: #0b1418;
+    --surface: #122126;
+    --surface-raised: #16282e;
+    --sky: #16323c;
+    --sky-strong: #1d4250;
+    --text: #e8f1f3;
+    --text-secondary: #a9bfc5;
+    --heading: #86d4e4;
+    --border: #5f808a;
+    --border-subtle: #223740;
+    --accent: #5ec4d9;
+    --accent-text: #06232c;
+    --accent-hover: #86d4e4;
+    --focus: #86d4e4;
     --danger: #f08a8a;
     --danger-bg: #2e1616;
-    --success: #0ca30c;
-    --info-bg: #14202f;
+    --success: #5fd07e;
+    --info-bg: #16323c;
     --seg-frequent: #3987e5;
     --seg-infrequent: #d95926;
     --seg-inactive: #199e70;
+    --shadow: none;
   }
 }
 
@@ -70,6 +83,11 @@ h2,
 h3 {
   line-height: 1.25;
   margin: 0 0 0.5rem;
+}
+
+h1,
+h2 {
+  color: var(--heading);
 }
 
 h1 {
@@ -212,6 +230,14 @@ a {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
   padding: 1.25rem;
+  box-shadow: var(--shadow);
+}
+
+/* Secondary container: pale sky-blue */
+.card-sky {
+  background: var(--sky);
+  border-color: var(--sky-strong);
+  box-shadow: none;
 }
 
 .muted {
@@ -248,6 +274,12 @@ td {
 th {
   font-weight: 600;
   color: var(--text-secondary);
+}
+
+thead th {
+  background: var(--sky);
+  color: var(--text);
+  border-bottom-color: var(--sky-strong);
 }
 
 td.num,
@@ -452,4 +484,112 @@ dialog.confirm::backdrop {
 
 .label-like {
   font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- dashboards */
+
+.lead {
+  max-width: 48rem;
+  margin: 0;
+}
+
+.meta {
+  margin: 0;
+}
+
+.small {
+  font-size: 0.9rem;
+}
+
+.chart-box {
+  position: relative;
+  height: 18rem;
+  margin: 1rem 0;
+}
+
+.chart-tall {
+  height: 24rem;
+}
+
+.chart-services {
+  height: 26rem;
+}
+
+.eval-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+}
+
+.stats dt {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.stats dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.tiles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1rem;
+}
+
+.tile p {
+  margin: 0;
+}
+
+.tile-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.tile-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--heading);
+  margin: 0.25rem 0 !important;
+}
+
+.tile-note {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--success);
+  border-radius: 999px;
+  color: var(--success);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+h4 {
+  font-size: 1rem;
+  margin: 1rem 0 0.5rem;
+}
+
+/* Standalone links (not inside a sentence) get a 24px target (WCAG 2.5.8). */
+p > a:only-child,
+.tile-note a,
+.section-head > a {
+  display: inline-block;
+  min-height: 1.5rem;
+  line-height: 1.5rem;
 }
