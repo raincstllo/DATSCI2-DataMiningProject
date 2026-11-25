@@ -2,7 +2,7 @@ import { Component, computed, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
-import { ChartThemeService, SERIES_SHAPES } from '../../core/chart-theme';
+import { ChartThemeService } from '../../core/chart-theme';
 import {
   formatDateTime,
   formatMonth,
@@ -14,6 +14,7 @@ import {
 } from '../../core/format';
 import { ResultsStore } from '../../core/results.store';
 import { RunPanel } from '../../shared/run-panel/run-panel';
+import { ToothStrip } from '../../shared/tooth-strip';
 
 const HISTORY_MONTHS = 12;
 const TOP_SERVICES = 5;
@@ -27,7 +28,7 @@ const roundPeso = (n: number): string => formatPeso(Math.round(n / 1000) * 1000)
 /** Owner view of the revenue analysis: what to expect and what to prepare for. */
 @Component({
   selector: 'app-revenue',
-  imports: [BaseChartDirective, RunPanel, RouterLink],
+  imports: [BaseChartDirective, RunPanel, RouterLink, ToothStrip],
   providers: [provideCharts(withDefaultRegisterables())],
   templateUrl: './revenue.html',
   styleUrl: './revenue.css',
@@ -101,23 +102,28 @@ export class Revenue implements OnInit {
     return {
       labels: rows.map((r) => formatMonth(r.month)),
       datasets: [
+        // Filled marks: recorded revenue.
         {
-          label: 'Actual',
+          label: 'Recorded',
           data: rows.map((r) => r.actual),
           borderColor: t.accent,
           backgroundColor: t.accent,
-          pointStyle: SERIES_SHAPES[0],
+          pointStyle: 'circle',
           pointRadius: 4,
           pointHoverRadius: 6,
           borderWidth: 2,
         },
+        // Outlined marks on a dashed line: expected revenue, joined to the last recorded month.
         {
           label: 'Expected',
           data: rows.map((r, i) => (i === lastActual ? r.actual : r.forecast)),
-          borderColor: t.series[1],
-          backgroundColor: t.series[1],
-          pointStyle: SERIES_SHAPES[1],
-          pointRadius: 5,
+          borderColor: t.accent,
+          backgroundColor: t.surface,
+          pointBackgroundColor: t.surface,
+          pointBorderColor: t.accent,
+          pointBorderWidth: 2,
+          pointStyle: 'circle',
+          pointRadius: rows.map((_, i) => (i === lastActual ? 0 : 5)),
           pointHoverRadius: 7,
           borderWidth: 2,
           borderDash: [6, 4],
@@ -126,7 +132,7 @@ export class Revenue implements OnInit {
           label: 'Likely range',
           data: rows.map((r) => r.high),
           borderColor: 'transparent',
-          backgroundColor: `${t.series[1]}33`,
+          backgroundColor: `${t.accent}2e`,
           pointRadius: 0,
           pointHitRadius: 0,
           fill: '+1',
@@ -144,7 +150,11 @@ export class Revenue implements OnInit {
       animation: t.reducedMotion ? false : { duration: 400 },
       interaction: { mode: 'index', intersect: false },
       scales: {
-        x: { ticks: { color: t.muted }, grid: { display: false }, border: { color: t.axis } },
+        x: {
+          ticks: { color: t.muted, maxRotation: 0, autoSkip: true, autoSkipPadding: 12 },
+          grid: { display: false },
+          border: { color: t.axis },
+        },
         y: {
           min: 0,
           ticks: { color: t.muted, callback: (v) => formatPesoCompact(Number(v)) },
@@ -153,7 +163,8 @@ export class Revenue implements OnInit {
         },
       },
       plugins: {
-        legend: { labels: { color: t.text, usePointStyle: true, padding: 16, filter: (item) => !!item.text } },
+        // The legend is printed above the chart with the charting marks.
+        legend: { display: false },
         tooltip: {
           filter: (item) => !!item.dataset.label && item.parsed.y !== null,
           callbacks: {
@@ -176,7 +187,7 @@ export class Revenue implements OnInit {
     const expected = rows.filter((r) => r.forecast !== null);
     if (!actual.length) return '';
     return (
-      `Line chart of monthly revenue. Actual, ${formatMonth(actual[0].month)} to ` +
+      `Line chart of monthly revenue. Recorded, ${formatMonth(actual[0].month)} to ` +
       `${formatMonth(actual[actual.length - 1].month)}: ` +
       actual.map((r) => `${formatMonth(r.month)} ${formatPeso(r.actual!)}`).join(', ') +
       '. Expected: ' +

@@ -1,133 +1,181 @@
-<div>
-  <h1>Revenue</h1>
-  <p class="lead">What to expect in the coming months, and which services to prepare for.</p>
-</div>
+<div class="record">
+  <app-tooth-strip />
 
-<app-run-panel
-  type="revenue"
-  heading="Update the forecast"
-  buttonLabel="Update with latest records"
-  description="Recalculates the forecast and service pairings using all visit records. Takes 2 to 3 minutes."
-/>
-
-@switch (state().status) {
-  @case ('loading') {
-    @if (!result()) {
-      <p role="status">Loading…</p>
-    }
-  }
-  @case ('empty') {
-    <p class="alert">No forecast yet. Select <strong>Update with latest records</strong> to create one.</p>
-  }
-  @case ('error') {
-    <p class="alert alert-error" role="alert">
-      The forecast could not be loaded. Check that the backend is running, then reload the page.
-    </p>
-  }
-}
-
-@if (result(); as r) {
-  <p class="muted meta">Last updated {{ fmt.dateTime(r.generated_at) }}.</p>
-
-  @if (next(); as n) {
-    <section class="card card-sky headline" aria-labelledby="expect-heading">
-      <h2 id="expect-heading">
-        Expected revenue for {{ fmt.monthLong(n.month) }}@if (nextIsCurrent()) {
-          (this month)
-        }
-      </h2>
-      <p class="big">About {{ fmt.roundPeso(n.revenue) }}</p>
-      <p>Most likely between {{ fmt.roundPeso(n.low) }} and {{ fmt.roundPeso(n.high) }}.</p>
-      @if (last(); as l) {
-        <p class="muted">
-          For comparison, {{ fmt.monthLong(l.month) }} brought in {{ fmt.peso(l.revenue) }} from
-          {{ fmt.number(l.cases) }} services.
-        </p>
-      }
-      @if (later().length) {
-        <p class="muted">
-          After that:
-          @for (f of later(); track f.month; let lastItem = $last) {
-            {{ fmt.monthLong(f.month) }} about {{ fmt.roundPeso(f.revenue) }}{{ lastItem ? '.' : ',' }}
-          }
-        </p>
-      }
-    </section>
-  }
-
-  <section class="card" aria-labelledby="trend-heading">
-    <h2 id="trend-heading">The last 12 months and what's next</h2>
-    <div class="chart-box chart-tall">
-      <canvas
-        baseChart
-        type="line"
-        role="img"
-        [attr.aria-label]="chartLabel()"
-        [data]="chartData()"
-        [options]="chartOptions()"
-      ></canvas>
+  <div class="record-head">
+    <div>
+      <h1>Revenue</h1>
+      <p class="lead">What to expect in the coming months, and which services to prepare for.</p>
     </div>
-    <details>
-      <summary>Show data table</summary>
-      <div class="table-wrap" tabindex="0" role="region" aria-label="Monthly revenue table">
-        <table>
-          <caption class="visually-hidden">Monthly revenue, actual and expected</caption>
-          <thead>
-            <tr>
-              <th scope="col">Month</th>
-              <th scope="col" class="num">Actual</th>
-              <th scope="col" class="num">Expected</th>
-              <th scope="col" class="num">Likely range</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of rows(); track row.month) {
-              <tr>
-                <th scope="row">{{ fmt.month(row.month) }}</th>
-                <td class="num">{{ row.actual === null ? '—' : fmt.peso(row.actual) }}</td>
-                <td class="num">{{ row.forecast === null ? '—' : fmt.peso(row.forecast) }}</td>
-                <td class="num">
-                  {{ row.low === null || row.high === null ? '—' : fmt.peso(row.low) + ' to ' + fmt.peso(row.high) }}
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </details>
-  </section>
-
-  <div class="two-col">
-    <section class="card" aria-labelledby="busy-heading">
-      <h2 id="busy-heading">Busiest services next month</h2>
-      <ol class="rank">
-        @for (s of topServices(); track s.service) {
-          <li>
-            <span class="rank-name">{{ s.service }}</span>
-            <span class="muted">about {{ fmt.roundPeso(s.forecast_revenue) }} from about {{ fmt.number(round(s.forecast_cases)) }} patients</span>
-          </li>
-        }
-      </ol>
-      <p class="muted small">Plan supplies and schedule time for these first.</p>
-    </section>
-
-    <section class="card" aria-labelledby="pairs-heading">
-      <h2 id="pairs-heading">Services to offer together</h2>
-      @if (pairs().length) {
-        <ul class="advice">
-          @for (p of pairs(); track p.a + p.b) {
-            <li>
-              Patients who had <strong>{{ p.a }}</strong> often also had <strong>{{ p.b }}</strong>
-              ({{ fmt.percent(p.share) }} of them). Consider offering them together, or reminding
-              {{ p.a }} patients about {{ p.b }}.
-            </li>
-          }
-        </ul>
-      } @else {
-        <p>No strong pairings found in the records yet.</p>
-      }
-    </section>
+    @if (result(); as r) {
+      <p class="record-date">Last updated {{ fmt.dateTime(r.generated_at) }}</p>
+    }
   </div>
 
-  <p><a routerLink="/analysis">How this forecast is calculated</a></p>
-}
+  <app-run-panel
+    type="revenue"
+    heading="Update the forecast"
+    buttonLabel="Update with latest records"
+    description="Recalculates the forecast and service pairings using all visit records. Takes 2 to 3 minutes."
+  />
+
+  @switch (state().status) {
+    @case ('loading') {
+      @if (!result()) {
+        <p class="record-note" role="status">Loading…</p>
+      }
+    }
+    @case ('empty') {
+      <p class="record-note">
+        <span class="mark mark-expected" aria-hidden="true"></span>
+        <span>No forecast yet. Select <strong>Update with latest records</strong> to create one.</span>
+      </p>
+    }
+    @case ('error') {
+      <p class="record-note record-note-error" role="alert">
+        <span class="mark mark-attention" aria-hidden="true"></span>
+        <span>The forecast could not be loaded. Check that the backend is running, then reload the page.</span>
+      </p>
+    }
+  }
+
+  @if (result()) {
+    <section aria-labelledby="expect-heading">
+      <h2 id="expect-heading" class="visually-hidden">What to expect</h2>
+      <ul class="figures" [class.figures-two]="!later().length">
+        @if (next(); as n) {
+          <li class="fig fig-money">
+            <p class="fig-label">
+              <span class="mark mark-expected" aria-hidden="true"></span>
+              <span>
+                Expected for {{ fmt.monthLong(n.month) }}@if (nextIsCurrent()) {
+                  (this month)
+                }
+              </span>
+            </p>
+            <p class="fig-value"><span class="fig-prefix">About </span>{{ fmt.roundPeso(n.revenue) }}</p>
+            <p class="fig-note">Most likely between {{ fmt.roundPeso(n.low) }} and {{ fmt.roundPeso(n.high) }}</p>
+          </li>
+        }
+        @if (last(); as l) {
+          <li class="fig fig-money fig-recorded">
+            <p class="fig-label">
+              <span class="mark" aria-hidden="true"></span>
+              <span>{{ fmt.monthLong(l.month) }}, for comparison</span>
+            </p>
+            <p class="fig-value">{{ fmt.peso(l.revenue) }}</p>
+            <p class="fig-note">Brought in from {{ fmt.number(l.cases) }} services</p>
+          </li>
+        }
+        @if (later().length) {
+          <li class="fig">
+            <p class="fig-label">
+              <span class="mark mark-expected" aria-hidden="true"></span>
+              <span>After that</span>
+            </p>
+            <ul class="fig-value later">
+              @for (f of later(); track f.month) {
+                <li>
+                  <span class="later-month">{{ fmt.monthLong(f.month) }}</span>
+                  <span class="later-amount">about {{ fmt.roundPeso(f.revenue) }}</span>
+                </li>
+              }
+            </ul>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="record-cell record-wide" aria-labelledby="trend-heading">
+      <h2 id="trend-heading">The last 12 months and what's next</h2>
+      <p class="legend">
+        <span><span class="mark" aria-hidden="true"></span>Recorded</span>
+        <span><span class="mark mark-expected" aria-hidden="true"></span>Expected (dashed line)</span>
+        <span><span class="band" aria-hidden="true"></span>Likely range (shaded)</span>
+      </p>
+      <div class="chart-box chart-tall">
+        <canvas
+          baseChart
+          type="line"
+          role="img"
+          [attr.aria-label]="chartLabel()"
+          [data]="chartData()"
+          [options]="chartOptions()"
+        ></canvas>
+      </div>
+      <details>
+        <summary>Show data table</summary>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Monthly revenue table">
+          <table>
+            <caption class="visually-hidden">Monthly revenue, recorded and expected</caption>
+            <thead>
+              <tr>
+                <th scope="col">Month</th>
+                <th scope="col" class="num">Recorded</th>
+                <th scope="col" class="num">Expected</th>
+                <th scope="col" class="num">Likely range</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of rows(); track row.month) {
+                <tr>
+                  <th scope="row">{{ fmt.month(row.month) }}</th>
+                  <td class="num">{{ row.actual === null ? '—' : fmt.peso(row.actual) }}</td>
+                  <td class="num">{{ row.forecast === null ? '—' : fmt.peso(row.forecast) }}</td>
+                  <td class="num">
+                    {{ row.low === null || row.high === null ? '—' : fmt.peso(row.low) + ' to ' + fmt.peso(row.high) }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <div class="record-body">
+      <section class="record-cell" aria-labelledby="busy-heading">
+        <h2 id="busy-heading">Busiest services next month</h2>
+        <ol class="rank" role="list">
+          @for (s of topServices(); track s.service) {
+            <li>
+              <span class="rank-name">{{ s.service }}</span>
+              <span class="rank-figure">
+                about {{ fmt.roundPeso(s.forecast_revenue) }} from about {{ fmt.number(round(s.forecast_cases)) }} patients
+              </span>
+            </li>
+          }
+        </ol>
+        <p class="cell-note">
+          <span class="mark mark-expected" aria-hidden="true"></span>
+          <span>Plan supplies and schedule time for these first.</span>
+        </p>
+      </section>
+
+      <section class="record-cell" aria-labelledby="pairs-heading">
+        <h2 id="pairs-heading">Services to offer together</h2>
+        @if (pairs().length) {
+          <ul class="pairs">
+            @for (p of pairs(); track p.a + p.b) {
+              <li>
+                <p class="pair-names">
+                  <strong>{{ p.a }}</strong>
+                  <span class="pair-join" aria-hidden="true">+</span>
+                  <span class="visually-hidden"> and </span>
+                  <strong>{{ p.b }}</strong>
+                </p>
+                <p class="pair-text">
+                  Patients who had {{ p.a }} often also had {{ p.b }} ({{ fmt.percent(p.share) }} of them).
+                  Consider offering them together, or reminding {{ p.a }} patients about {{ p.b }}.
+                </p>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p>No strong pairings found in the records yet.</p>
+        }
+      </section>
+    </div>
+
+    <p class="record-foot"><a routerLink="/analysis">How this forecast is calculated</a></p>
+  }
+</div>
