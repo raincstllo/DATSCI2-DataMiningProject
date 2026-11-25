@@ -810,7 +810,8 @@ p > a:only-child,
   letter-spacing: -0.01em;
 }
 
-.fig-label .mark {
+.fig-label .mark,
+.fig-label .shape {
   margin-top: 0.25rem;
 }
 

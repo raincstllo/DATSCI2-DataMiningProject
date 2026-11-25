@@ -50,7 +50,7 @@
         }
       </li>
       <li class="fig">
-        <p class="fig-label"><span class="mark mark-attention" aria-hidden="true"></span>Patients to contact</p>
+        <p class="fig-label"><span class="shape shape-Inactive" aria-hidden="true"></span>Patients to contact</p>
         @if (toContact(); as c) {
           <p class="fig-value fig-attention">{{ fmt.number(c.patients) }}</p>
           <p class="fig-note">{{ inactiveLabel }} · <a routerLink="/retention">See who</a></p>
