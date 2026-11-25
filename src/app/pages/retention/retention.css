@@ -4,16 +4,7 @@
   gap: 1.5rem;
 }
 
-.lead {
-  max-width: 48rem;
-  margin: 0;
-}
-
-.meta {
-  margin: 0;
-}
-
-.segment-grid {
+.groups {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -22,77 +13,32 @@
   gap: 1rem;
 }
 
-.segment h3,
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.group h3,
 .seg-cell {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin: 0;
 }
 
-.segment-count {
+.group p {
+  margin: 0;
+}
+
+.group-count {
   font-size: 1.1rem;
 }
 
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
-  gap: 0.75rem;
-  margin: 0 0 1rem;
+.group-action {
+  flex: 1;
 }
 
-.stats dt {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
-.stats dd {
-  margin: 0;
-  font-weight: 600;
-}
-
-.strategy {
-  margin: 0;
-}
-
-.chart-box {
-  position: relative;
-  height: 18rem;
-  margin: 1rem 0;
-}
-
-.chart-tall {
-  height: 26rem;
-}
-
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin: 1rem 0 0.5rem;
-}
-
-.filters .field {
-  flex: 1 1 12rem;
-}
-
-.range {
-  color: var(--text-secondary);
-}
-
-.pager {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.eval-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-  gap: 1.5rem;
-}
-
-.small {
-  font-size: 0.9rem;
+.group .btn {
+  align-self: flex-start;
 }

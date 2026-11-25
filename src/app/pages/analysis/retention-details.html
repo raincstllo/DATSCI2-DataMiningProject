@@ -1,0 +1,136 @@
+@switch (state().status) {
+  @case ('empty') {
+    <p class="alert">No retention results yet. Use <strong>Run analysis</strong> above.</p>
+  }
+  @case ('error') {
+    <p class="alert alert-error" role="alert">The retention results could not be loaded.</p>
+  }
+}
+
+@if (result(); as r) {
+  <p class="muted meta">Results from {{ fmt.dateTime(r.generated_at) }}.</p>
+
+  <section class="card" aria-labelledby="ret-scatter-heading">
+    <h3 id="ret-scatter-heading">How the segments separate</h3>
+    <p class="muted">
+      Each mark is one patient. Further right means longer since their last visit; higher means
+      more spent in total. Segment names in plain language: Frequent = {{ labels.Frequent }},
+      Infrequent = {{ labels.Infrequent }}, Inactive = {{ labels.Inactive }}.
+    </p>
+    <div class="chart-box chart-tall">
+      <canvas
+        baseChart
+        type="scatter"
+        role="img"
+        [attr.aria-label]="scatterLabel()"
+        [data]="scatterData()"
+        [options]="scatterOptions()"
+      ></canvas>
+    </div>
+    <details>
+      <summary>Show data table</summary>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Segment averages table">
+        <table>
+          <caption>Segment averages. Every patient's values are on the Follow-ups page.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Segment</th>
+              <th scope="col">Shape</th>
+              <th scope="col" class="num">Patients</th>
+              <th scope="col" class="num">Avg. days since last visit</th>
+              <th scope="col" class="num">Avg. visits</th>
+              <th scope="col" class="num">Avg. spend</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of r.payload.segments; track s.segment) {
+              <tr>
+                <th scope="row">{{ s.segment }}</th>
+                <td>{{ shapeNames[s.segment] }}</td>
+                <td class="num">{{ fmt.number(s.patients) }}</td>
+                <td class="num">{{ fmt.number(s.avg_recency_days) }}</td>
+                <td class="num">{{ s.avg_visits }}</td>
+                <td class="num">{{ fmt.peso(s.avg_total_fee) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+
+  <section class="card" aria-labelledby="ret-eval-heading">
+    <h3 id="ret-eval-heading">Model evaluation</h3>
+    <div class="eval-grid">
+      <div>
+        <dl class="stats">
+          <div><dt>Algorithm</dt><dd>{{ r.metrics.algorithm }}</dd></div>
+          <div><dt>Segments (k)</dt><dd>{{ r.metrics.k }}</dd></div>
+          <div><dt>Silhouette score</dt><dd>{{ r.metrics.silhouette.toFixed(3) }}</dd></div>
+          <div><dt>Inertia</dt><dd>{{ fmt.number(r.metrics.inertia) }}</dd></div>
+          <div>
+            <dt>Features</dt>
+            <dd>Days since last visit, number of visits, total spend (log), standardized</dd>
+          </div>
+        </dl>
+        <p class="muted small">
+          Silhouette ranges from −1 to 1; higher means patients sit closer to their own segment than
+          to others. k = 3 matches the three planned segments.
+        </p>
+
+        <h4>Data cleaning (PySpark)</h4>
+        <dl class="stats">
+          <div><dt>Rows loaded</dt><dd>{{ fmt.number(r.metrics.etl.rows_loaded) }}</dd></div>
+          <div><dt>Duplicate rows removed</dt><dd>{{ fmt.number(r.metrics.etl.duplicates_dropped) }}</dd></div>
+          <div><dt>Future-dated rows removed</dt><dd>{{ fmt.number(r.metrics.etl.future_rows_dropped) }}</dd></div>
+          <div><dt>Clean rows</dt><dd>{{ fmt.number(r.metrics.etl.rows_clean) }}</dd></div>
+          <div><dt>Visits</dt><dd>{{ fmt.number(r.metrics.etl.visits_clean) }}</dd></div>
+          <div><dt>Patients</dt><dd>{{ fmt.number(r.metrics.etl.patients_clean) }}</dd></div>
+          <div><dt>Likely duplicate patients</dt><dd>{{ fmt.number(r.metrics.etl.likely_duplicate_patients) }}</dd></div>
+          @if (r.metrics.etl.inconsistent_patient_ids !== undefined) {
+            <div>
+              <dt>Patient IDs with conflicting details</dt>
+              <dd>{{ fmt.number(r.metrics.etl.inconsistent_patient_ids) }}</dd>
+            </div>
+          }
+        </dl>
+      </div>
+
+      <div>
+        <h4>Silhouette score by number of segments</h4>
+        <div class="chart-box">
+          <canvas
+            baseChart
+            type="bar"
+            role="img"
+            [attr.aria-label]="silhouetteLabel()"
+            [data]="silhouetteData()"
+            [options]="silhouetteOptions()"
+          ></canvas>
+        </div>
+        <details>
+          <summary>Show data table</summary>
+          <div class="table-wrap" tabindex="0" role="region" aria-label="Silhouette table">
+            <table>
+              <caption class="visually-hidden">Silhouette score by number of segments</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Segments (k)</th>
+                  <th scope="col" class="num">Silhouette score</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of silhouetteRows(); track row.k) {
+                  <tr>
+                    <th scope="row">{{ row.k }}{{ row.used ? ' (used)' : '' }}</th>
+                    <td class="num">{{ row.score.toFixed(3) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+}

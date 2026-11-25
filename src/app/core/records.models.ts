@@ -62,3 +62,12 @@ export interface FieldErrors {
   error: string;
   fields?: Record<string, string>;
 }
+
+export interface VisitSummary {
+  from: string;
+  to: string;
+  visits: number;
+  patients: number;
+  services: number;
+  revenue: number;
+}

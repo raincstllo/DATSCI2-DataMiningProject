@@ -2,10 +2,24 @@
 
 <header class="site-header">
   <div class="header-inner">
-    <p class="brand">Dental Clinic Decision Support</p>
+    <a class="brand" routerLink="/">
+      @if (!logoMissing()) {
+        <img class="logo" src="logo.png" alt="" height="40" (error)="logoMissing.set(true)" />
+      }
+      <span>Dental Clinic Decision Support</span>
+    </a>
     @if (auth.isLoggedIn()) {
       <nav aria-label="Main">
         <ul>
+          <li>
+            <a
+              routerLink="/"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: true }"
+              ariaCurrentWhenActive="page"
+              >Home</a
+            >
+          </li>
           <li>
             <a routerLink="/patients" routerLinkActive="active" ariaCurrentWhenActive="page">Patients</a>
           </li>
@@ -17,12 +31,17 @@
               routerLink="/retention"
               routerLinkActive="active"
               ariaCurrentWhenActive="page"
-              >Patient retention</a
+              >Follow-ups</a
             >
           </li>
           <li>
             <a routerLink="/revenue" routerLinkActive="active" ariaCurrentWhenActive="page"
-              >Revenue and services</a
+              >Revenue</a
+            >
+          </li>
+          <li>
+            <a routerLink="/analysis" routerLinkActive="active" ariaCurrentWhenActive="page"
+              >Analysis details</a
             >
           </li>
         </ul>

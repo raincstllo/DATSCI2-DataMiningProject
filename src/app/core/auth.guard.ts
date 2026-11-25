@@ -6,4 +6,4 @@ export const authGuard: CanActivateFn = () =>
   inject(AuthService).isLoggedIn() || inject(Router).createUrlTree(['/login']);
 
 export const guestGuard: CanActivateFn = () =>
-  !inject(AuthService).isLoggedIn() || inject(Router).createUrlTree(['/retention']);
+  !inject(AuthService).isLoggedIn() || inject(Router).createUrlTree(['/']);

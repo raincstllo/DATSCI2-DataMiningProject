@@ -52,16 +52,28 @@ export const routes: Routes = [
   },
   {
     path: 'retention',
-    title: 'Patient retention | Dental Clinic Decision Support',
+    title: 'Follow-ups | Dental Clinic Decision Support',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/retention/retention').then((m) => m.Retention),
   },
   {
     path: 'revenue',
-    title: 'Revenue and services | Dental Clinic Decision Support',
+    title: 'Revenue | Dental Clinic Decision Support',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/revenue/revenue').then((m) => m.Revenue),
   },
-  { path: '', pathMatch: 'full', redirectTo: 'retention' },
-  { path: '**', redirectTo: 'retention' },
+  {
+    path: 'analysis',
+    title: 'Analysis details | Dental Clinic Decision Support',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/analysis/analysis').then((m) => m.Analysis),
+  },
+  {
+    path: '',
+    pathMatch: 'full',
+    title: 'Overview | Dental Clinic Decision Support',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/home/home').then((m) => m.Home),
+  },
+  { path: '**', redirectTo: '' },
 ];

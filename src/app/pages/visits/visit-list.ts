@@ -29,9 +29,9 @@ const PAGE_SIZE = 25;
           <div class="field">
             <label for="visit-service">Service</label>
             <select id="visit-service" [value]="service()" (change)="setFilter('service', $any($event.target).value)">
-              <option value="">All services</option>
+              <option value="" [selected]="!service()">All services</option>
               @for (s of services() ?? []; track s) {
-                <option [value]="s">{{ s }}</option>
+                <option [value]="s" [selected]="s === service()">{{ s }}</option>
               }
             </select>
           </div>

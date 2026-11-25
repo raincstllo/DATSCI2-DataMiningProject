@@ -3,6 +3,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { map, Observable } from 'rxjs';
 import { LoginResponse } from './api.models';
+import { ResultsStore } from './results.store';
 
 interface Session {
   token: string;
@@ -26,6 +27,7 @@ function tokenExpiry(token: string): number | null {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly results = inject(ResultsStore);
   private readonly session = signal<Session | null>(null);
   private expiryTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -56,6 +58,7 @@ export class AuthService {
   logout(expired = false): void {
     clearTimeout(this.expiryTimer);
     this.session.set(null);
+    this.results.reset();
     sessionStorage.removeItem(STORAGE_KEY);
     this.router.navigate(['/login'], expired ? { queryParams: { expired: 1 } } : {});
   }

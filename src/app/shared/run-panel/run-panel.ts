@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, input, output, signal } from '@angular/core';
 import { AnalysisService } from '../../core/analysis.service';
 import { AnalysisJob, JobStep } from '../../core/api.models';
+import { ResultsStore } from '../../core/results.store';
 import { formatDate, formatMonth, formatNumber, formatPeso } from '../../core/format';
 
 const POLL_MS = 1000;
@@ -59,10 +60,17 @@ const STEP_TEXT: Record<string, (s: JobStep) => string> = {
 })
 export class RunPanel {
   private readonly api = inject(AnalysisService);
+  private readonly store = inject(ResultsStore);
   private pollTimer: ReturnType<typeof setTimeout> | undefined;
 
-  readonly type = input.required<string>();
+  readonly type = input.required<'retention' | 'revenue'>();
+  readonly heading = input('Run analysis');
+  readonly buttonLabel = input('Run analysis');
   readonly description = input('');
+  /** Unique id prefix when several panels share a page. */
+  readonly idPrefix = input('run');
+  /** Use 3 when the panel sits inside a section that already has an h2. */
+  readonly headingLevel = input<2 | 3>(2);
   readonly completed = output<void>();
 
   protected readonly job = signal<AnalysisJob | null>(null);
@@ -113,8 +121,9 @@ export class RunPanel {
     clearTimeout(this.pollTimer);
     if (job.status === 'running') {
       this.pollTimer = setTimeout(() => this.poll(job.id), POLL_MS);
-    } else if (job.status === 'succeeded' && job.type === this.type()) {
-      this.completed.emit();
+    } else if (job.status === 'succeeded' && (job.type === 'retention' || job.type === 'revenue')) {
+      this.store.load(job.type, true);
+      if (job.type === this.type()) this.completed.emit();
     }
   }
 
