@@ -4,9 +4,9 @@
   <div class="header-inner">
     <a class="brand" routerLink="/">
       @if (!logoMissing()) {
-        <img class="logo" src="logo.png" alt="" height="40" (error)="logoMissing.set(true)" />
+        <img class="logo" src="logo.jpg" alt="" width="44" height="44" (error)="logoMissing.set(true)" />
       }
-      <span>Dental Clinic Decision Support</span>
+      <span>Atiwag Dental Care</span>
     </a>
     @if (auth.isLoggedIn()) {
       <nav aria-label="Main">

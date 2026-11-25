@@ -25,9 +25,12 @@
 }
 
 .logo {
-  height: 40px;
-  width: auto;
-  border-radius: 6px;
+  height: 44px;
+  width: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+  /* The logo has a white background; keep it on white in dark mode too. */
+  background: #ffffff;
 }
 
 nav {

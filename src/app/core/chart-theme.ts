@@ -27,7 +27,7 @@ const LIGHT: Omit<ChartTheme, 'dark' | 'reducedMotion'> = {
   segments: { Frequent: '#2a78d6', Infrequent: '#eb6834', Inactive: '#1baf7a' },
   series: ['#2a78d6', '#eb6834', '#1baf7a'],
   // Brand teal-blue for single-series charts.
-  accent: '#0b5c73',
+  accent: '#005078',
   accentMuted: '#9fd2e0',
 };
 

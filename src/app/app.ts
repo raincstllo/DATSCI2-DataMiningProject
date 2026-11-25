@@ -12,7 +12,7 @@ import { FlashService } from './core/flash.service';
 export class App {
   protected readonly auth = inject(AuthService);
   protected readonly flash = inject(FlashService);
-  /** Hides the logo image if public/logo.png has not been added yet. */
+  /** Hides the logo image if public/logo.jpg has not been added yet. */
   protected readonly logoMissing = signal(false);
 
   protected skipToMain(event: Event): void {
