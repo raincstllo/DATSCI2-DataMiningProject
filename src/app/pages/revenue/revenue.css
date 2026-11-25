@@ -1,18 +1,4 @@
 /* Revenue on the shared record card (styles.css). */
-.lead {
-  margin-top: 0.375rem;
-  color: var(--text-secondary);
-  max-width: 60ch;
-}
-
-.record-head .record-date {
-  margin: 0;
-}
-
-.record-note-error {
-  background: var(--attention-bg);
-}
-
 /* Figures: next month's expected money leads, then last month for comparison, then the later months. */
 .figures {
   grid-template-columns: 1.3fr 1.3fr 1fr;
@@ -184,19 +170,6 @@
   color: var(--text-secondary);
   font-size: 0.9375rem;
   max-width: 60ch;
-}
-
-.record-foot {
-  margin: 0;
-  padding: 1rem 1.75rem;
-  border-top: 1.5px solid var(--rule);
-}
-
-.record-foot a {
-  display: inline-block;
-  min-height: 1.5rem;
-  line-height: 1.5rem;
-  font-weight: 700;
 }
 
 @media (max-width: 75rem) {

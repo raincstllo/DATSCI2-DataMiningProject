@@ -4,8 +4,6 @@
 }
 
 .lead {
-  margin: 0.375rem 0 0;
-  color: var(--text-secondary);
   max-width: 68ch;
 }
 
@@ -41,10 +39,6 @@
   color: var(--text-secondary);
   font-size: 0.9375rem;
   font-variant-numeric: tabular-nums;
-}
-
-.record-note-error {
-  background: var(--attention-bg);
 }
 
 /* Headline evaluation numbers. */
@@ -154,13 +148,6 @@
 .counts .count-total dt {
   color: var(--text);
   font-weight: 700;
-}
-
-.seg-cell {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  white-space: nowrap;
 }
 
 /* The approach with the lowest error. */
