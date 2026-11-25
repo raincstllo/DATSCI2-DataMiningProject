@@ -10,8 +10,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pipeline.common import log_step, shutdown  # noqa: E402
 from pipeline.etl import run_etl  # noqa: E402
 from pipeline.retention import run_retention  # noqa: E402
+from pipeline.revenue import run_revenue  # noqa: E402
 
-ANALYSES = {'retention': run_retention}
+ANALYSES = {'retention': run_retention, 'revenue': run_revenue}
 
 
 def main():

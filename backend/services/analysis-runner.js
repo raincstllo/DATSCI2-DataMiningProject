@@ -7,6 +7,7 @@ const config = require('../config');
 // Must match ANALYSES in analysis/run.py.
 const ANALYSES = {
   retention: 'Patient retention segments (K-Means)',
+  revenue: 'Revenue forecast (Random Forest) and service combinations (Apriori)',
 };
 
 const MAX_JOBS_KEPT = 20;
