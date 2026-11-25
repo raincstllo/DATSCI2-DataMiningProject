@@ -7,6 +7,12 @@
       <nav aria-label="Main">
         <ul>
           <li>
+            <a routerLink="/patients" routerLinkActive="active" ariaCurrentWhenActive="page">Patients</a>
+          </li>
+          <li>
+            <a routerLink="/visits" routerLinkActive="active" ariaCurrentWhenActive="page">Visits</a>
+          </li>
+          <li>
             <a
               routerLink="/retention"
               routerLinkActive="active"
@@ -27,5 +33,15 @@
 </header>
 
 <main id="main" tabindex="-1">
+  <div role="status" aria-live="polite">
+    @if (flash.message(); as message) {
+      <p class="alert alert-success flash">
+        <span>{{ message }}</span>
+        <button type="button" class="btn btn-secondary btn-small" (click)="flash.clear()">
+          Dismiss
+        </button>
+      </p>
+    }
+  </div>
   <router-outlet />
 </main>

@@ -31,5 +31,7 @@ export const formatMonthLong = (iso: string): string => monthLongFmt.format(new 
 /** 0.6173 -> "+62%", -0.33 -> "−33%" */
 export const formatChange = (share: number | null): string =>
   share === null ? 'new' : `${share >= 0 ? '+' : '−'}${Math.abs(Math.round(share * 100))}%`;
+/** Today's date on this device as YYYY-MM-DD. */
+export const todayIso = (): string => new Intl.DateTimeFormat('en-CA').format(new Date());
 /** For real timestamps, shown in the viewer's local time. */
 export const formatDateTime = (iso: string): string => dateTimeFmt.format(new Date(iso));
