@@ -6,6 +6,7 @@ import { ResultsStore } from '../../core/results.store';
 import { SEGMENT_ACTIONS, SEGMENT_DESCRIPTIONS, SEGMENT_LABELS } from '../../core/segments';
 import { Pager } from '../../shared/pager';
 import { RunPanel } from '../../shared/run-panel/run-panel';
+import { ToothStrip } from '../../shared/tooth-strip';
 
 type SortKey = 'spend' | 'recency' | 'name';
 
@@ -16,7 +17,7 @@ const SEGMENTS: SegmentName[] = ['Inactive', 'Infrequent', 'Frequent'];
 /** Owner view of the retention clustering: who to contact and how. */
 @Component({
   selector: 'app-retention',
-  imports: [RouterLink, RunPanel, Pager],
+  imports: [RouterLink, RunPanel, Pager, ToothStrip],
   templateUrl: './retention.html',
   styleUrl: './retention.css',
 })
@@ -43,6 +44,12 @@ export class Retention implements OnInit {
   protected readonly search = signal('');
   protected readonly sort = signal<SortKey>('spend');
   protected readonly page = signal(1);
+
+  /** Plain name of the group the list is showing, or null for all patients. */
+  protected readonly filterLabel = computed(() => {
+    const seg = this.segmentFilter();
+    return seg === 'all' ? null : SEGMENT_LABELS[seg];
+  });
 
   protected readonly cards = computed(() => {
     const r = this.result();

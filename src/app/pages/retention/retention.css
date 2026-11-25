@@ -1,44 +1,261 @@
-:host {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+/* Follow-ups on the shared record card (styles.css). */
+.lead {
+  margin-top: 0.375rem;
+  color: var(--text-secondary);
+  max-width: 60ch;
 }
 
-.groups {
-  list-style: none;
+.record-head .record-date {
   margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
-  gap: 1rem;
+}
+
+.record-note-error {
+  background: var(--attention-bg);
+}
+
+/* Patient groups: three ruled cells, most urgent first. */
+.groups {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-bottom: 0;
 }
 
 .group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  grid-row: span 5;
+  padding-left: 1.75rem;
+  padding-right: 1.75rem;
 }
 
-.group h3,
-.seg-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.group h3 {
   margin: 0;
+  font-size: 1rem;
+  color: var(--text);
 }
 
-.group p {
-  margin: 0;
+.group h3 .shape {
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-top: 0.25rem;
 }
 
-.group-count {
-  font-size: 1.1rem;
+.group-share {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text-secondary);
 }
 
 .group-action {
-  flex: 1;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--rule-fine);
+  max-width: 48ch;
 }
 
 .group .btn {
-  align-self: flex-start;
+  justify-self: start;
+  align-self: end;
+  margin-top: 1rem;
+}
+
+/* The group the list below is showing: ink fill, a filled mark and its own wording. */
+.group-btn-on .mark-on {
+  border-color: var(--ink-text);
+  background: var(--ink-text);
+}
+
+/* The follow-up list sits under the groups, closed off by a printed rule. */
+.record-cell {
+  border-top: 1.5px solid var(--rule);
+}
+
+.record-cell h2 {
+  margin-bottom: 1rem;
+}
+
+.record-cell h2:focus {
+  outline: none;
+}
+
+.list-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 1.25rem 0 0.5rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--tint);
+  font-size: 0.9375rem;
+}
+
+/* Keep the mark on the first line when the status wraps. */
+.list-status .shape {
+  margin-top: 0.375rem;
+}
+
+.seg-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.record-foot {
+  margin: 0;
+  padding: 1rem 1.75rem;
+  border-top: 1.5px solid var(--rule);
+}
+
+.record-foot a {
+  display: inline-block;
+  min-height: 1.5rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+/* Phone call rows are hidden until the table stops fitting. */
+.call-list {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1.5px solid var(--rule);
+}
+
+.call-row {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--rule-fine);
+}
+
+.call-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+}
+
+.call-name {
+  font-weight: 700;
+}
+
+.call-name a {
+  display: inline-block;
+  min-height: 1.5rem;
+}
+
+.call-top .seg-cell {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.call-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 0.625rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+
+.call-btn:hover {
+  background: var(--tint);
+}
+
+.call-meta {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tablets: groups stack, each cell laid out across: who on the left, what to do on the right. */
+@media (max-width: 60rem) {
+  .groups {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .group {
+    grid-row: auto;
+    grid-template-rows: none;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    grid-template-areas:
+      'label action'
+      'value action'
+      'note button';
+    column-gap: 1.75rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .group h3 {
+    grid-area: label;
+  }
+
+  .group .fig-value {
+    grid-area: value;
+    margin: 0.25rem 0;
+  }
+
+  .group .fig-note {
+    grid-area: note;
+  }
+
+  .group-action {
+    grid-area: action;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .group .btn {
+    grid-area: button;
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 40rem) {
+  .list-table {
+    display: none;
+  }
+
+  .call-list {
+    display: block;
+  }
+
+  .record-foot {
+    padding: 1rem;
+  }
+}
+
+/* Phones: one column inside each group cell (after the tablet rules so it wins). */
+@media (max-width: 40rem) {
+  .group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: none;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .group h3,
+  .group .fig-value,
+  .group .fig-note,
+  .group-action,
+  .group .btn {
+    grid-area: auto;
+  }
+
+  .group-action {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--rule-fine);
+  }
 }

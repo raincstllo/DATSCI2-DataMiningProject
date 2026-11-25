@@ -1,151 +1,218 @@
-<div>
-  <h1>Follow-ups</h1>
-  <p class="lead">
-    Who to contact, based on how recently and how often each patient visits and how much they have
-    spent.
-  </p>
-</div>
+<div class="record">
+  <app-tooth-strip />
 
-<app-run-panel
-  type="retention"
-  heading="Update the list"
-  buttonLabel="Update with latest records"
-  description="Regroups patients using all visit records, including new ones. Takes 1 to 2 minutes."
-/>
+  <div class="record-head">
+    <div>
+      <h1>Follow-ups</h1>
+      <p class="lead">
+        Who to contact, based on how recently and how often each patient visits and how much they have
+        spent.
+      </p>
+    </div>
+    @if (result(); as r) {
+      <p class="record-date">Last updated {{ fmt.dateTime(r.generated_at) }}</p>
+    }
+  </div>
 
-@switch (state().status) {
-  @case ('loading') {
-    @if (!result()) {
-      <p role="status">Loading…</p>
+  <app-run-panel
+    type="retention"
+    heading="Update the list"
+    buttonLabel="Update with latest records"
+    description="Regroups patients using all visit records, including new ones. Takes 1 to 2 minutes."
+  />
+
+  @switch (state().status) {
+    @case ('loading') {
+      @if (!result()) {
+        <p class="record-note" role="status">Loading…</p>
+      }
+    }
+    @case ('empty') {
+      <p class="record-note">
+        <span class="mark mark-expected" aria-hidden="true"></span>
+        <span>No groups yet. Select <strong>Update with latest records</strong> to create them.</span>
+      </p>
+    }
+    @case ('error') {
+      <p class="record-note record-note-error" role="alert">
+        <span class="mark mark-attention" aria-hidden="true"></span>
+        <span>The follow-up list could not be loaded. Check that the backend is running, then reload the page.</span>
+      </p>
     }
   }
-  @case ('empty') {
-    <p class="alert">No groups yet. Select <strong>Update with latest records</strong> to create them.</p>
-  }
-  @case ('error') {
-    <p class="alert alert-error" role="alert">
-      The follow-up list could not be loaded. Check that the backend is running, then reload the page.
-    </p>
-  }
-}
 
-@if (result(); as r) {
-  <p class="muted meta">Last updated {{ fmt.dateTime(r.generated_at) }}.</p>
+  @if (result()) {
+    <section aria-labelledby="groups-heading">
+      <h2 id="groups-heading" class="visually-hidden">Patient groups</h2>
+      <ul class="figures groups">
+        @for (s of cards(); track s.segment) {
+          <li class="fig group">
+            <h3 class="fig-label">
+              <span class="shape shape-{{ s.segment }}" aria-hidden="true"></span>
+              {{ labels[s.segment] }}
+            </h3>
+            <p class="fig-value" [class.fig-attention]="s.segment === 'Inactive'">
+              {{ fmt.number(s.patients) }}
+              <span class="group-share">patients · {{ fmt.percent(s.share) }}</span>
+            </p>
+            <p class="fig-note">{{ descriptions[s.segment] }}</p>
+            <p class="group-action"><strong>What to do:</strong> {{ actions[s.segment] }}</p>
+            @if (segmentFilter() === s.segment) {
+              <button type="button" class="btn group-btn group-btn-on" aria-pressed="true" (click)="showGroup(s.segment)">
+                <span class="mark mark-on" aria-hidden="true"></span>
+                Showing below
+              </button>
+            } @else {
+              <button type="button" class="btn btn-secondary group-btn" aria-pressed="false" (click)="showGroup(s.segment)">
+                Show these patients
+              </button>
+            }
+          </li>
+        }
+      </ul>
+    </section>
 
-  <section aria-labelledby="groups-heading">
-    <h2 id="groups-heading">Patient groups</h2>
-    <ul class="groups">
-      @for (s of cards(); track s.segment) {
-        <li class="card group">
-          <h3>
-            <span class="shape shape-{{ s.segment }}" aria-hidden="true"></span>
-            {{ labels[s.segment] }}
-          </h3>
-          <p class="group-count">
-            <strong>{{ fmt.number(s.patients) }}</strong> patients
-            <span class="muted">({{ fmt.percent(s.share) }})</span>
-          </p>
-          <p class="muted">{{ descriptions[s.segment] }}</p>
-          <p class="group-action"><strong>What to do:</strong> {{ actions[s.segment] }}</p>
-          <button type="button" class="btn btn-secondary" (click)="showGroup(s.segment)">
-            Show these patients
-          </button>
-        </li>
-      }
-    </ul>
-  </section>
+    <section class="record-cell" aria-labelledby="followup-heading">
+      <h2 id="followup-heading" tabindex="-1">Follow-up list</h2>
 
-  <section class="card" aria-labelledby="followup-heading">
-    <h2 id="followup-heading" tabindex="-1">Follow-up list</h2>
-
-    <div class="filters">
-      <div class="field">
-        <label for="seg-filter">Group</label>
-        <select id="seg-filter" [value]="segmentFilter()" (change)="setSegment($any($event.target).value)">
-          <option value="all" [selected]="segmentFilter() === 'all'">All patients</option>
-          @for (s of segments; track s) {
-            <option [value]="s" [selected]="s === segmentFilter()">{{ labels[s] }}</option>
-          }
-        </select>
+      <div class="filters">
+        <div class="field">
+          <label for="seg-filter">Group</label>
+          <select id="seg-filter" [value]="segmentFilter()" (change)="setSegment($any($event.target).value)">
+            <option value="all" [selected]="segmentFilter() === 'all'">All patients</option>
+            @for (s of segments; track s) {
+              <option [value]="s" [selected]="s === segmentFilter()">{{ labels[s] }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="name-search">Search by name, patient ID or number</label>
+          <input
+            id="name-search"
+            type="search"
+            autocomplete="off"
+            [value]="search()"
+            (input)="setSearch($any($event.target).value)"
+          />
+        </div>
+        <div class="field">
+          <label for="sort">Sort by</label>
+          <select id="sort" [value]="sort()" (change)="setSort($any($event.target).value)">
+            <option value="spend">Highest total spend</option>
+            <option value="recency">Longest since last visit</option>
+            <option value="name">Name (A–Z)</option>
+          </select>
+        </div>
       </div>
-      <div class="field">
-        <label for="name-search">Search by name, patient ID or number</label>
-        <input
-          id="name-search"
-          type="search"
-          autocomplete="off"
-          [value]="search()"
-          (input)="setSearch($any($event.target).value)"
-        />
-      </div>
-      <div class="field">
-        <label for="sort">Sort by</label>
-        <select id="sort" [value]="sort()" (change)="setSort($any($event.target).value)">
-          <option value="spend">Highest total spend</option>
-          <option value="recency">Longest since last visit</option>
-          <option value="name">Name (A–Z)</option>
-        </select>
-      </div>
-    </div>
 
-    <p role="status" class="muted">{{ rangeText() }}</p>
+      <p role="status" class="list-status">
+        @if (segmentFilter() !== 'all') {
+          <span class="shape shape-{{ segmentFilter() }}" aria-hidden="true"></span>
+          <span><strong>{{ filterLabel() }}</strong> · {{ rangeText() }}</span>
+        } @else {
+          <span>{{ rangeText() }}</span>
+        }
+      </p>
 
-    @if (pageRows().length) {
-      <div class="table-wrap" tabindex="0" role="region" aria-label="Follow-up list table">
-        <table>
-          <caption class="visually-hidden">Follow-up list, {{ rangeText() }}</caption>
-          <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Contact number</th>
-              <th scope="col">Group</th>
-              <th scope="col">Last visit</th>
-              <th scope="col" class="num">Visits</th>
-              <th scope="col" class="num">Total spent</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (p of pageRows(); track p.patient_id || p.name) {
+      @if (pageRows().length) {
+        <!-- Desktop and tablet: the full table. -->
+        <div class="table-wrap list-table" tabindex="0" role="region" aria-label="Follow-up list table">
+          <table>
+            <caption class="visually-hidden">Follow-up list, {{ rangeText() }}</caption>
+            <thead>
               <tr>
-                <th scope="row">
+                <th scope="col">Name</th>
+                <th scope="col">Contact number</th>
+                @if (segmentFilter() === 'all') {
+                  <th scope="col">Group</th>
+                }
+                <th scope="col">Last visit</th>
+                <th scope="col" class="num">Visits</th>
+                <th scope="col" class="num">Total spent</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of pageRows(); track p.patient_id || p.name) {
+                <tr>
+                  <th scope="row">
+                    @if (p.patient_id) {
+                      <a [routerLink]="['/patients', p.patient_id]">{{ p.name }}</a>
+                    } @else {
+                      {{ p.name }}
+                    }
+                  </th>
+                  <td>
+                    @if (p.contact_number) {
+                      <a [href]="'tel:' + p.contact_number">{{ fmt.phone(p.contact_number) }}</a>
+                    }
+                  </td>
+                  @if (segmentFilter() === 'all') {
+                    <td>
+                      <span class="seg-cell">
+                        <span class="shape shape-{{ p.segment }}" aria-hidden="true"></span>
+                        {{ labels[p.segment] }}
+                      </span>
+                    </td>
+                  }
+                  <td>
+                    {{ fmt.date(p.last_visit) }}
+                    <span class="muted">({{ fmt.number(p.recency_days) }} days ago)</span>
+                  </td>
+                  <td class="num">{{ p.visits }}</td>
+                  <td class="num">{{ fmt.peso(p.total_fee) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Phones: one call row per patient. -->
+        <ul class="call-list" aria-label="Follow-up list">
+          @for (p of pageRows(); track p.patient_id || p.name) {
+            <li class="call-row">
+              <div class="call-top">
+                <span class="call-name">
                   @if (p.patient_id) {
                     <a [routerLink]="['/patients', p.patient_id]">{{ p.name }}</a>
                   } @else {
                     {{ p.name }}
                   }
-                </th>
-                <td>
-                  @if (p.contact_number) {
-                    <a [href]="'tel:' + p.contact_number">{{ fmt.phone(p.contact_number) }}</a>
-                  }
-                </td>
-                <td>
+                </span>
+                @if (segmentFilter() === 'all') {
                   <span class="seg-cell">
                     <span class="shape shape-{{ p.segment }}" aria-hidden="true"></span>
                     {{ labels[p.segment] }}
                   </span>
-                </td>
-                <td>
-                  {{ fmt.date(p.last_visit) }}
-                  <span class="muted">({{ fmt.number(p.recency_days) }} days ago)</span>
-                </td>
-                <td class="num">{{ p.visits }}</td>
-                <td class="num">{{ fmt.peso(p.total_fee) }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
+                }
+              </div>
+              @if (p.contact_number) {
+                <a class="call-btn" [href]="'tel:' + p.contact_number">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path
+                      d="M5.6 3.5h3l1.6 4.2-2 1.4a10.5 10.5 0 0 0 6.7 6.7l1.4-2 4.2 1.6v3a1.6 1.6 0 0 1-1.7 1.6A16.5 16.5 0 0 1 4 5.2a1.6 1.6 0 0 1 1.6-1.7z"
+                    />
+                  </svg>
+                  <span><span class="visually-hidden">Call </span>{{ fmt.phone(p.contact_number) }}</span>
+                </a>
+              }
+              <p class="call-meta">
+                Last visit {{ fmt.date(p.last_visit) }} ({{ fmt.number(p.recency_days) }} days ago) ·
+                {{ p.visits }} {{ p.visits === 1 ? 'visit' : 'visits' }} · {{ fmt.peso(p.total_fee) }}
+              </p>
+            </li>
+          }
+        </ul>
+      }
 
-    <app-pager
-      [page]="page()"
-      [total]="filtered().length"
-      [pageSize]="pageSize"
-      label="Follow-up list pages"
-      (pageChange)="page.set($event)"
-    />
-  </section>
+      <app-pager
+        [page]="page()"
+        [total]="filtered().length"
+        [pageSize]="pageSize"
+        label="Follow-up list pages"
+        (pageChange)="page.set($event)"
+      />
+    </section>
 
-  <p><a routerLink="/analysis">How these groups are calculated</a></p>
-}
+    <p class="record-foot"><a routerLink="/analysis">How these groups are calculated</a></p>
+  }
+</div>

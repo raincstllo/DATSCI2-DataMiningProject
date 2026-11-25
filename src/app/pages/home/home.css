@@ -1,114 +1,6 @@
-/* The Overview is one dental record card: a ruled sheet on the desk ground. */
-.record {
-  background: var(--surface);
-  border: 1.5px solid var(--rule);
-}
-
-/* Printed upper-arch tooth numbers across the head of the card. */
-.fdi {
-  display: grid;
-  grid-template-columns: repeat(16, 1fr);
-  border-bottom: 1.5px solid var(--rule);
-  font-size: 0.6875rem;
-  line-height: 1;
-  color: var(--text-secondary);
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.fdi span {
-  padding: 0.3125rem 0;
-}
-
-.fdi span + span {
-  border-left: 1px solid var(--rule-fine);
-}
-
-/* Midline between the two quadrants. */
-.fdi span:nth-child(9) {
-  border-left: 1.5px solid var(--rule);
-}
-
-.record-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 1rem 1.5rem;
-  padding: 1.5rem 1.75rem 1.25rem;
-  border-bottom: 1.5px solid var(--rule);
-}
-
-.record-head h1 {
-  margin: 0;
-}
-
-.record-date {
-  margin: 0.25rem 0 0;
-  color: var(--text-secondary);
-}
-
-.record-note {
-  display: flex;
-  align-items: baseline;
-  gap: 0.625rem;
-  margin: 0;
-  padding: 0.875rem 1.75rem;
-  background: var(--tint);
-  border-bottom: 1px solid var(--rule-fine);
-}
-
-.record-note .mark {
-  transform: translateY(0.0625rem);
-}
-
-/* Figures: ruled cells; the 1.5px grid gap over the rule colour prints the rules. */
+/* Overview-only details on top of the shared record card (styles.css). */
 .figures {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
   grid-template-columns: 1.3fr 1.3fr 1fr 1fr;
-  gap: 1.5px;
-  background: var(--rule);
-  border-bottom: 1.5px solid var(--rule);
-}
-
-/* Each cell shares the row's label / value / note lines, so figures sit on one baseline. */
-.fig {
-  display: grid;
-  grid-row: span 3;
-  grid-template-rows: subgrid;
-  row-gap: 0;
-  align-content: start;
-  background: var(--surface);
-  padding: 1.25rem 1.5rem 1.5rem;
-  min-width: 0;
-}
-
-.fig p {
-  margin: 0;
-}
-
-.fig-label {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  font-weight: 700;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
-.fig .fig-value {
-  align-self: end;
-  margin: 0.5rem 0 0.25rem;
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-  overflow-wrap: anywhere;
 }
 
 /* This month's money leads. */
@@ -120,19 +12,6 @@
   color: var(--ink);
 }
 
-.fig .fig-attention {
-  color: var(--attention);
-}
-
-.fig .fig-text {
-  font-size: 1.5rem;
-  letter-spacing: -0.01em;
-}
-
-.fig-label .mark {
-  margin-top: 0.25rem;
-}
-
 .fig-prefix {
   font-size: 1.125rem;
   font-weight: 600;
@@ -140,90 +19,8 @@
   color: var(--text-secondary);
 }
 
-.fig-note {
-  color: var(--text-secondary);
-  font-size: 0.9375rem;
-}
-
-.fig-note a {
-  display: inline-block;
-  min-height: 1.5rem;
-  line-height: 1.5rem;
-  font-weight: 700;
-}
-
-.record-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-  gap: 1.5px;
-  background: var(--rule);
-}
-
-.record-cell {
-  background: var(--surface);
-  padding: 1.25rem 1.75rem 1.5rem;
-  min-width: 0;
-}
-
-.section-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.5rem 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.section-head h2 {
-  margin: 0;
-}
-
-.section-head > a {
-  display: inline-block;
-  min-height: 1.5rem;
-  line-height: 1.5rem;
-  font-weight: 700;
-}
-
-.record-cell td,
-.record-cell th {
-  padding: 0.625rem 0.75rem;
-}
-
-.record-cell tr > :first-child {
-  padding-left: 0;
-}
-
-.record-cell tr > :last-child {
-  padding-right: 0;
-}
-
 .home-chart {
   height: 20rem;
-}
-
-.record-cell .cell-wrap {
-  min-width: 9rem;
-}
-
-.record-cell tbody th {
-  font-weight: 600;
-  color: var(--text);
-}
-
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
-  margin: -0.25rem 0 0.75rem;
-  font-size: 0.9375rem;
-  color: var(--text-secondary);
-}
-
-.legend > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 @media (max-width: 75rem) {
@@ -232,49 +29,14 @@
   }
 }
 
-@media (max-width: 60rem) {
-  .record-body {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 @media (max-width: 40rem) {
-  .fdi {
-    font-size: 0.625rem;
-  }
-
-  .record-head,
-  .fig,
-  .record-cell {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  .record-note {
-    padding: 0.75rem 1rem;
-  }
-
-  /* Let names wrap so the totals fit on the narrowest phones. */
-  .record-cell td,
-  .record-cell th {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-
-  .record-cell tbody td:nth-child(2) {
-    white-space: normal;
-    min-width: 5.5rem;
-  }
-
   .figures {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .record-head .actions {
-    width: 100%;
-  }
-
-  .record-head .actions .btn {
-    flex: 1 1 auto;
+  /* Let names wrap so the totals fit on the narrowest phones. */
+  .record-cell tbody td:nth-child(2) {
+    white-space: normal;
+    min-width: 5.5rem;
   }
 }

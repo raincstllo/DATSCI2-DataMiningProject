@@ -24,7 +24,7 @@ const LIGHT: Omit<ChartTheme, 'dark' | 'reducedMotion'> = {
   muted: '#46606a',
   grid: '#d5e7ed',
   axis: '#6c8a95',
-  segments: { Frequent: '#2a78d6', Infrequent: '#eb6834', Inactive: '#1baf7a' },
+  segments: { Frequent: '#005078', Infrequent: '#b26b00', Inactive: '#c62828' },
   series: ['#2a78d6', '#eb6834', '#1baf7a'],
   // Brand teal-blue for single-series charts.
   accent: '#005078',
@@ -37,7 +37,7 @@ const DARK: Omit<ChartTheme, 'dark' | 'reducedMotion'> = {
   muted: '#a6bec5',
   grid: '#1f3a45',
   axis: '#6f919c',
-  segments: { Frequent: '#3987e5', Infrequent: '#d95926', Inactive: '#199e70' },
+  segments: { Frequent: '#8ccfe3', Infrequent: '#f0b45a', Inactive: '#ff8f85' },
   series: ['#3987e5', '#d95926', '#199e70'],
   accent: '#8ccfe3',
   accentMuted: '#1d4250',

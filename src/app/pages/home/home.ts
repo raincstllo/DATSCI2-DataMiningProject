@@ -16,6 +16,7 @@ import { Visit, VisitSummary } from '../../core/records.models';
 import { readApiError, RecordsService } from '../../core/records.service';
 import { ResultsStore } from '../../core/results.store';
 import { SEGMENT_LABELS } from '../../core/segments';
+import { ToothStrip } from '../../shared/tooth-strip';
 
 const RECENT = 10;
 
@@ -28,14 +29,12 @@ interface MonthRow {
   /** True when the month is still in progress. */
   partial: boolean;
 }
-/** FDI tooth numbers for the upper arch, printed across the head of the record card. */
-const UPPER_ARCH = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
 const roundPeso = (n: number): string => formatPeso(Math.round(n / 1000) * 1000);
 
 /** Owner's home page: today's picture at a glance plus the latest visits. */
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, BaseChartDirective],
+  imports: [RouterLink, BaseChartDirective, ToothStrip],
   providers: [provideCharts(withDefaultRegisterables())],
   templateUrl: './home.html',
   styleUrl: './home.css',
@@ -46,7 +45,6 @@ export class Home implements OnInit {
   private readonly themes = inject(ChartThemeService);
 
   protected readonly today = todayIso();
-  protected readonly toothNumbers = UPPER_ARCH;
   protected readonly todayText = new Intl.DateTimeFormat('en-PH', { dateStyle: 'full' }).format(new Date());
   protected readonly inactiveLabel = SEGMENT_LABELS.Inactive;
   protected readonly fmt = {
