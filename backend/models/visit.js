@@ -1,26 +1,48 @@
 const mongoose = require('mongoose');
+const {
+  SERVICES,
+  TOOTH,
+  PATIENT_ID,
+  VISIT_ID,
+  MAX_FEE,
+  MAX_SERVICES_PER_VISIT,
+} = require('../constants/records');
 
-// One document per CSV row (one service line). A visit with several services
-// shares the same visit_id across documents.
-const visitSchema = new mongoose.Schema(
+const serviceSchema = new mongoose.Schema(
   {
-    visit_id: { type: String, required: true, trim: true, match: /^V\d+$/ },
-    patient_id: { type: String, required: true, trim: true, match: /^P\d+$/ },
-    name: { type: String, required: true, trim: true, maxlength: 200 },
-    // Philippine mobile number, 11 digits (09XXXXXXXXX). Personal data: never a model feature.
-    contact_number: { type: String, required: true, trim: true, match: /^09\d{9}$/ },
-    date_visited: { type: Date, required: true },
-    nature_of_visit: { type: String, required: true, trim: true, maxlength: 100 },
-    // Each element is a tooth label (1-32 permanent, A-T primary). Empty when N/A.
-    teeth_operated: { type: [String], default: [] },
-    fee: { type: Number, required: true, min: 0 },
-    source_row: { type: Number, required: true, min: 1 },
+    nature_of_visit: { type: String, required: true, enum: SERVICES },
+    teeth_operated: {
+      type: [String],
+      default: [],
+      validate: { validator: (teeth) => teeth.every((t) => TOOTH.test(t)), message: 'Invalid tooth' },
+    },
+    fee: { type: Number, required: true, min: 0, max: MAX_FEE },
   },
-  { strict: 'throw', collection: 'visits', timestamps: { createdAt: 'imported_at', updatedAt: false } },
+  { _id: false, strict: 'throw' },
 );
 
-visitSchema.index({ visit_id: 1 });
-visitSchema.index({ patient_id: 1 });
-visitSchema.index({ date_visited: 1 });
+// One document per visit; a visit can include several services.
+const visitSchema = new mongoose.Schema(
+  {
+    visit_id: { type: String, required: true, unique: true, match: VISIT_ID },
+    patient_id: { type: String, required: true, match: PATIENT_ID },
+    date_visited: { type: Date, required: true },
+    services: {
+      type: [serviceSchema],
+      validate: {
+        validator: (s) => s.length >= 1 && s.length <= MAX_SERVICES_PER_VISIT,
+        message: `A visit needs 1 to ${MAX_SERVICES_PER_VISIT} services`,
+      },
+    },
+  },
+  {
+    strict: 'throw',
+    collection: 'visits',
+    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
+  },
+);
+
+visitSchema.index({ patient_id: 1, date_visited: -1 });
+visitSchema.index({ date_visited: -1 });
 
 module.exports = mongoose.model('Visit', visitSchema);

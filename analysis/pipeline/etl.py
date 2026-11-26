@@ -33,10 +33,37 @@ SCHEMA = T.StructType(
 
 
 def extract():
-    """Read visits with pymongo, dropping `_id` before Spark sees the data."""
-    projection = {f: 1 for f in RAW_FIELDS} | {'_id': 0}
+    """Read one row per service line: visits unwound and joined with their patient.
+
+    `_id` is dropped in the projection, before Spark sees the data.
+    """
+    pipeline = [
+        {'$unwind': '$services'},
+        {
+            '$lookup': {
+                'from': 'patients',
+                'localField': 'patient_id',
+                'foreignField': 'patient_id',
+                'as': 'patient',
+            }
+        },
+        {'$unwind': '$patient'},
+        {
+            '$project': {
+                '_id': 0,
+                'visit_id': 1,
+                'patient_id': 1,
+                'name': '$patient.name',
+                'contact_number': '$patient.contact_number',
+                'date_visited': 1,
+                'nature_of_visit': '$services.nature_of_visit',
+                'teeth_operated': '$services.teeth_operated',
+                'fee': '$services.fee',
+            }
+        },
+    ]
     rows = []
-    for doc in get_db().visits.find({}, projection):
+    for doc in get_db().visits.aggregate(pipeline):
         rows.append(
             (
                 doc['visit_id'],

@@ -7,6 +7,8 @@ const { rejectOperatorKeys } = require('./middleware/sanitize');
 const { requireAuth } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const analysisRoutes = require('./routes/analysis');
+const patientRoutes = require('./routes/patients');
+const visitRoutes = require('./routes/visits');
 
 mongoose.set('sanitizeFilter', true);
 
@@ -17,12 +19,22 @@ app.use(express.json({ limit: '10kb' }));
 app.use(rejectOperatorKeys);
 
 app.use('/api/auth', authRoutes);
+app.use('/api/patients', requireAuth, patientRoutes);
+app.use('/api/visits', requireAuth, visitRoutes);
 app.use('/api', requireAuth, analysisRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 
 // Generic errors only: never echo request data or internals back to the client or logs.
+// Field messages are fixed strings written in validation.js, never user input.
 app.use((err, req, res, next) => {
+  if (err.status === 400 && err.fields) {
+    return res.status(400).json({ error: 'Please fix the highlighted fields.', fields: err.fields });
+  }
+  if (['ValidationError', 'CastError', 'StrictModeError'].includes(err.name)) {
+    return res.status(400).json({ error: 'Invalid request' });
+  }
+  if (err.code === 11000) return res.status(409).json({ error: 'That record already exists' });
   const status = err.status || err.statusCode || 500;
   if (status >= 500) console.error(`Request failed: ${err.name}`);
   res.status(status).json({ error: status >= 500 ? 'Something went wrong' : 'Invalid request' });
