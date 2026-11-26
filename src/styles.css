@@ -1,1 +1,302 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-raised: #ffffff;
+  --text: #0b0b0b;
+  --text-secondary: #52514e;
+  --border: #c3c2b7;
+  --border-subtle: #e1e0d9;
+  --accent: #1c5cab;
+  --accent-text: #ffffff;
+  --accent-hover: #184f95;
+  --focus: #1c5cab;
+  --danger: #b42828;
+  --danger-bg: #fdf0f0;
+  --success: #006300;
+  --info-bg: #eef4fc;
+  --seg-frequent: #2a78d6;
+  --seg-infrequent: #eb6834;
+  --seg-inactive: #1baf7a;
+  --radius: 8px;
+  --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-raised: #222221;
+    --text: #f0efec;
+    --text-secondary: #c3c2b7;
+    --border: #5c5b56;
+    --border-subtle: #2c2c2a;
+    --accent: #6da7ec;
+    --accent-text: #0b0b0b;
+    --accent-hover: #86b6ef;
+    --focus: #86b6ef;
+    --danger: #f08a8a;
+    --danger-bg: #2e1616;
+    --success: #0ca30c;
+    --info-bg: #14202f;
+    --seg-frequent: #3987e5;
+    --seg-infrequent: #d95926;
+    --seg-inactive: #199e70;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font);
+  font-size: 100%;
+  line-height: 1.5;
+  background: var(--page);
+  color: var(--text);
+}
+
+body {
+  margin: 0;
+  min-width: 0;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  margin: 0 0 0.5rem;
+}
+
+h1 {
+  font-size: 1.75rem;
+}
+
+h2 {
+  font-size: 1.25rem;
+}
+
+h3 {
+  font-size: 1.05rem;
+}
+
+p {
+  margin: 0 0 0.75rem;
+}
+
+a {
+  color: var(--accent);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 0.5rem;
+  top: -100px;
+  z-index: 10;
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: var(--accent-text);
+  border-radius: var(--radius);
+}
+
+.skip-link:focus {
+  top: 0.5rem;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Controls: every target is at least 24x24 px (WCAG 2.5.8). */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  min-width: 2.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--accent);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--info-bg);
+  color: var(--accent);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.field label {
+  font-weight: 600;
+}
+
+.field input,
+.field select {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  color: var(--text);
+  font: inherit;
+}
+
+.field input[aria-invalid='true'] {
+  border-color: var(--danger);
+  border-width: 2px;
+}
+
+.field-error {
+  color: var(--danger);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--info-bg);
+  margin: 0 0 1rem;
+}
+
+.alert-error {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+
+.muted {
+  color: var(--text-secondary);
+}
+
+/* Data tables */
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+caption {
+  text-align: left;
+  font-weight: 600;
+  padding-bottom: 0.5rem;
+}
+
+th,
+td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+td.num,
+th.num {
+  text-align: right;
+}
+
+details > summary {
+  cursor: pointer;
+  min-height: 1.5rem;
+  padding: 0.25rem 0;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Shape keys that match the chart point styles. */
+.shape {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: none;
+}
+
+.shape-Frequent {
+  background: var(--seg-frequent);
+  border-radius: 50%;
+}
+
+.shape-Infrequent {
+  background: var(--seg-infrequent);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.shape-Inactive {
+  background: var(--seg-inactive);
+  transform: rotate(45deg) scale(0.85);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .shape {
+    forced-color-adjust: none;
+  }
+}
