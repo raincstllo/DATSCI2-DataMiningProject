@@ -1,37 +1,93 @@
+/* The update panel: a ruled sheet on its own, a ruled row inside a record card. */
+.run-panel {
+  background: var(--surface);
+  border: 1.5px solid var(--rule);
+  padding: 1.25rem 1.75rem 1.5rem;
+}
+
+:host-context(.record) .run-panel {
+  border: 0;
+  border-bottom: 1.5px solid var(--rule);
+}
+
 .run-head {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
+  align-items: center;
+  gap: 1rem 1.5rem;
 }
 
+.run-head h2,
+.run-head h3 {
+  margin: 0 0 0.25rem;
+}
+
+.run-head p {
+  margin: 0;
+  max-width: 60ch;
+}
+
+.run-head + * {
+  margin-top: 1rem;
+}
+
+h3,
+h4 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Pipeline steps: one charting mark per step. Filled = done, red = failed, outlined = working. */
 .steps {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: 0.35rem;
+  border-top: 1.5px solid var(--rule);
+  font-variant-numeric: tabular-nums;
 }
 
 .steps li {
   display: flex;
-  gap: 0.5rem;
+  align-items: baseline;
+  gap: 0.625rem;
+  padding: 0.4375rem 0;
+  border-bottom: 1px solid var(--rule-fine);
 }
 
-.step-mark {
-  width: 1.25rem;
-  flex: none;
-  font-weight: 700;
-  color: var(--success);
+.steps li:last-child {
+  border-bottom: 0;
 }
 
-.step-error,
-.step-error .step-mark {
-  color: var(--danger);
+.steps .mark {
+  transform: translateY(0.0625rem);
 }
 
-.step-pending,
-.step-pending .step-mark {
+.step-error {
+  color: var(--attention);
+}
+
+.step-pending {
   color: var(--text-secondary);
+}
+
+.step-pulse {
+  animation: step-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes step-pulse {
+  50% {
+    background: var(--ink);
+  }
+}
+
+@media (max-width: 40rem) {
+  .run-panel {
+    padding: 1rem;
+  }
+
+  .run-head .btn {
+    width: 100%;
+  }
 }

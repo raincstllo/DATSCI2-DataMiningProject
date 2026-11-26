@@ -1,0 +1,245 @@
+/* Log / edit visit on the shared record card (styles.css). Built for a tablet held chairside. */
+.error-summary {
+  margin: 1rem 1.75rem 0;
+}
+
+.who {
+  border-top: 0;
+  border-bottom: 1.5px solid var(--rule);
+}
+
+/* Big, easy targets for fingers. */
+.field input,
+.field select {
+  min-height: 3rem;
+}
+
+.field .btn,
+.f-remove .btn {
+  min-height: 3rem;
+}
+
+.selected {
+  display: grid;
+  gap: 0.125rem;
+  margin: 0;
+}
+
+.selected-name {
+  font-size: 1.25rem;
+}
+
+.results {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.375rem;
+}
+
+.results .btn {
+  width: 100%;
+  min-height: 3.25rem;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  text-align: left;
+}
+
+.result-meta {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+/* Services: one ruled block per service, numbered like a charting line. */
+.svc {
+  border: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.svc legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.svc legend + * {
+  clear: both;
+}
+
+.service-row {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  grid-template-areas: 'num service teeth fee remove';
+  gap: 0.75rem 1rem;
+  align-items: start;
+  padding: 1rem 0;
+  border-top: 1px solid var(--rule-fine);
+}
+
+.svc-num {
+  grid-area: num;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  margin: 1.5rem 0 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.f-service {
+  grid-area: service;
+}
+
+.f-teeth {
+  grid-area: teeth;
+}
+
+.f-fee {
+  grid-area: fee;
+}
+
+.f-remove {
+  grid-area: remove;
+  margin-top: 1.5rem;
+}
+
+.add-row {
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule-fine);
+}
+
+.add-row .btn {
+  min-height: 3rem;
+}
+
+/* Total and Save stay in view while the owner fills in services. */
+.form-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  padding: 0.875rem 1.75rem;
+  background: var(--tint);
+  border-top: 1.5px solid var(--rule);
+}
+
+.total {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.total-label {
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.total-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.form-foot .btn {
+  min-height: 3rem;
+  min-width: 7rem;
+}
+
+/*
+ * With an on-screen keyboard open the visible area is short, so the bar would sit on top of
+ * the field being typed in. Let it scroll with the form while typing, and on short screens.
+ */
+@media (pointer: coarse) {
+  .record:has(input:focus, textarea:focus) .form-foot {
+    position: static;
+  }
+}
+
+@media (max-height: 34rem) {
+  .form-foot {
+    position: static;
+  }
+}
+
+/* Keep the focused field clear of the sticky bar. */
+.field input,
+.field select,
+.add-row .btn {
+  scroll-margin-bottom: 6rem;
+}
+
+@media (max-width: 52rem) {
+  .service-row {
+    grid-template-columns: 2rem minmax(0, 1fr) minmax(0, 1fr) auto;
+    grid-template-areas:
+      'num service service service'
+      '. teeth fee remove';
+  }
+
+  .svc-num {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 40rem) {
+  .error-summary {
+    margin: 1rem 1rem 0;
+  }
+
+  .service-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'num num'
+      'service service'
+      'teeth fee'
+      'remove remove';
+  }
+
+  .svc-num {
+    justify-self: start;
+  }
+
+  .f-remove {
+    margin-top: 0;
+  }
+
+  .f-remove .btn,
+  .add-row .btn {
+    width: 100%;
+  }
+
+  .form-foot {
+    position: static;
+    padding: 0.75rem 1rem;
+  }
+
+  .form-foot .actions {
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+
+  .form-foot .actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .form-foot .actions .btn:last-child {
+    flex-grow: 2;
+  }
+}

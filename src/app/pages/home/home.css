@@ -1,0 +1,42 @@
+/* Overview-only details on top of the shared record card (styles.css). */
+.figures {
+  grid-template-columns: 1.3fr 1.3fr 1fr 1fr;
+}
+
+/* This month's money leads. */
+.fig-money .fig-value {
+  font-size: clamp(2rem, 1.4rem + 1.6vw, 2.75rem);
+}
+
+.fig-money:first-child .fig-value {
+  color: var(--ink);
+}
+
+.fig-prefix {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text-secondary);
+}
+
+.home-chart {
+  height: 20rem;
+}
+
+@media (max-width: 75rem) {
+  .figures {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 40rem) {
+  .figures {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Let names wrap so the totals fit on the narrowest phones. */
+  .record-cell tbody td:nth-child(2) {
+    white-space: normal;
+    min-width: 5.5rem;
+  }
+}

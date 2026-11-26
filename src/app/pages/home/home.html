@@ -1,0 +1,177 @@
+<div class="record">
+  <app-tooth-strip />
+
+  <div class="record-head">
+    <div>
+      <h1>Overview</h1>
+      <p class="record-date">{{ todayText }}</p>
+    </div>
+    <div class="actions">
+      <a class="btn" routerLink="/visits/new">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" /></svg>
+        Log visit
+      </a>
+      <a class="btn btn-secondary" routerLink="/patients/new">Add patient</a>
+    </div>
+  </div>
+
+  @if (needsAnalysis()) {
+    <p class="record-note">
+      <span class="mark mark-expected" aria-hidden="true"></span>
+      <span>
+        Some results haven't been calculated yet. Open <a routerLink="/retention">Follow-ups</a> or
+        <a routerLink="/revenue">Revenue</a> and select <strong>Update with latest records</strong>.
+      </span>
+    </p>
+  }
+
+  <section aria-labelledby="glance-heading">
+    <h2 id="glance-heading" class="visually-hidden">At a glance</h2>
+    <ul class="figures">
+      <li class="fig fig-money">
+        <p class="fig-label"><span class="mark" aria-hidden="true"></span>Revenue this month so far</p>
+        <p class="fig-value">{{ summary() ? fmt.peso(summary()!.revenue) : '…' }}</p>
+        <p class="fig-note">
+          @if (summary(); as s) {
+            {{ fmt.number(s.visits) }} visits, {{ fmt.number(s.patients) }} patients
+          }
+        </p>
+      </li>
+      <li class="fig fig-money">
+        <p class="fig-label">
+          <span class="mark mark-expected" aria-hidden="true"></span>Expected for the whole month
+        </p>
+        @if (thisMonthForecast(); as f) {
+          <p class="fig-value"><span class="fig-prefix">About </span>{{ fmt.roundPeso(f.revenue) }}</p>
+          <p class="fig-note">Likely {{ fmt.roundPeso(f.low) }} to {{ fmt.roundPeso(f.high) }}</p>
+        } @else {
+          <p class="fig-value">—</p>
+          <p class="fig-note"><a routerLink="/revenue">Update the forecast</a></p>
+        }
+      </li>
+      <li class="fig">
+        <p class="fig-label"><span class="shape shape-Inactive" aria-hidden="true"></span>Patients to contact</p>
+        @if (toContact(); as c) {
+          <p class="fig-value fig-attention">{{ fmt.number(c.patients) }}</p>
+          <p class="fig-note">{{ inactiveLabel }} · <a routerLink="/retention">See who</a></p>
+        } @else {
+          <p class="fig-value">—</p>
+          <p class="fig-note"><a routerLink="/retention">Update the list</a></p>
+        }
+      </li>
+      <li class="fig">
+        <p class="fig-label">
+          <span class="mark mark-expected" aria-hidden="true"></span>Busiest service next month
+        </p>
+        @if (topService(); as s) {
+          <p class="fig-value fig-text">{{ s.service }}</p>
+          <p class="fig-note">About {{ fmt.roundPeso(s.forecast_revenue) }}</p>
+        } @else {
+          <p class="fig-value">—</p>
+          <p class="fig-note"><a routerLink="/revenue">Update the forecast</a></p>
+        }
+      </li>
+    </ul>
+  </section>
+
+<div class="record-body">
+  <section class="record-cell" aria-labelledby="recent-heading">
+    <div class="section-head">
+      <h2 id="recent-heading">Recent visits</h2>
+      <a routerLink="/visits">See all visits</a>
+    </div>
+    @if (recentError(); as message) {
+      <p class="alert alert-error" role="alert">{{ message }}</p>
+    } @else if (recent(); as visits) {
+      @if (visits.length) {
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Recent visits table">
+          <table>
+            <caption class="visually-hidden">The 10 most recent visits up to today</caption>
+            <thead>
+              <tr>
+                <th scope="col">Date</th>
+                <th scope="col">Patient</th>
+                <th scope="col" class="num">Total</th>
+                <th scope="col">Services</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (v of visits; track v.visit_id) {
+                <tr>
+                  <th scope="row">{{ visitDate(v.date_visited) }}</th>
+                  <td>
+                    <a [routerLink]="['/patients', v.patient_id]">{{ v.patient_name ?? v.patient_id }}</a>
+                  </td>
+                  <td class="num">{{ fmt.peso(v.total_fee) }}</td>
+                  <td class="cell-wrap">{{ serviceText(v) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p>No visits recorded yet. <a routerLink="/visits/new">Log the first one</a>.</p>
+      }
+    } @else {
+      <p role="status">Loading…</p>
+    }
+  </section>
+
+  <section class="record-cell" aria-labelledby="months-heading">
+    <div class="section-head">
+      <h2 id="months-heading">Revenue, last 12 months</h2>
+      <a routerLink="/revenue">See the forecast</a>
+    </div>
+    @if (history().length) {
+      <div class="chart-box home-chart">
+        <canvas
+          baseChart
+          type="bar"
+          role="img"
+          [attr.aria-label]="chartLabel()"
+          [data]="chartData()"
+          [options]="chartOptions()"
+        ></canvas>
+      </div>
+      @if (currentExpected() !== null) {
+        <p class="legend">
+          <span><span class="mark" aria-hidden="true"></span>Recorded</span>
+          <span><span class="mark mark-expected" aria-hidden="true"></span>Expected for this month</span>
+        </p>
+      }
+      <details>
+        <summary>Show data table</summary>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Revenue by month table">
+          <table>
+            <caption class="visually-hidden">Revenue per month</caption>
+            <thead>
+              <tr>
+                <th scope="col">Month</th>
+                <th scope="col" class="num">Revenue</th>
+                <th scope="col" class="num">Services</th>
+                @if (currentExpected() !== null) {
+                  <th scope="col" class="num">Expected</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (h of history(); track h.month) {
+                <tr>
+                  <th scope="row">{{ fmt.monthLong(h.month) }}{{ h.partial ? ' (so far)' : '' }}</th>
+                  <td class="num">{{ fmt.peso(h.revenue) }}</td>
+                  <td class="num">{{ fmt.number(h.cases) }}</td>
+                  @if (currentExpected() !== null) {
+                    <td class="num">{{ h.expected !== null ? 'About ' + fmt.roundPeso(h.expected) : '—' }}</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </details>
+    } @else {
+      <p>The chart appears after the forecast has been calculated on the <a routerLink="/revenue">Revenue</a> page.</p>
+    }
+  </section>
+</div>
+</div>

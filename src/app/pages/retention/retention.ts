@@ -1,42 +1,36 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { ChartConfiguration, ChartData, TooltipItem } from 'chart.js';
-import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
-import { AnalysisService } from '../../core/analysis.service';
-import { RetentionPatient, RetentionResult, SegmentName } from '../../core/api.models';
-import { ChartThemeService, SEGMENT_SHAPE_NAMES, SEGMENT_SHAPES } from '../../core/chart-theme';
-import {
-  formatDate,
-  formatDateTime,
-  formatNumber,
-  formatPercent,
-  formatPeso,
-  formatPesoCompact,
-  formatPhone,
-} from '../../core/format';
+import { RouterLink } from '@angular/router';
+import { RetentionPatient, SegmentName } from '../../core/api.models';
+import { formatDate, formatDateTime, formatNumber, formatPercent, formatPeso, formatPhone } from '../../core/format';
+import { ResultsStore } from '../../core/results.store';
+import { SEGMENT_ACTIONS, SEGMENT_DESCRIPTIONS, SEGMENT_LABELS } from '../../core/segments';
+import { Pager } from '../../shared/pager';
 import { RunPanel } from '../../shared/run-panel/run-panel';
+import { ToothStrip } from '../../shared/tooth-strip';
 
-type LoadState = 'loading' | 'empty' | 'ready' | 'error';
-type SortKey = 'recency' | 'spend' | 'name';
+type SortKey = 'spend' | 'recency' | 'name';
 
-const TYPE = 'retention';
 const PAGE_SIZE = 25;
-const SEGMENTS: SegmentName[] = ['Frequent', 'Infrequent', 'Inactive'];
+/** Most urgent group first. */
+const SEGMENTS: SegmentName[] = ['Inactive', 'Infrequent', 'Frequent'];
 
+/** Owner view of the retention clustering: who to contact and how. */
 @Component({
   selector: 'app-retention',
-  imports: [BaseChartDirective, RunPanel],
-  // Registered here so Chart.js is only downloaded with this page.
-  providers: [provideCharts(withDefaultRegisterables())],
+  imports: [RouterLink, RunPanel, Pager, ToothStrip],
   templateUrl: './retention.html',
   styleUrl: './retention.css',
 })
 export class Retention implements OnInit {
-  private readonly api = inject(AnalysisService);
-  private readonly themes = inject(ChartThemeService);
+  private readonly store = inject(ResultsStore);
 
+  protected readonly state = this.store.retention;
+  protected readonly result = computed(() => this.state().data);
   protected readonly segments = SEGMENTS;
-  protected readonly shapeNames = SEGMENT_SHAPE_NAMES;
+  protected readonly labels = SEGMENT_LABELS;
+  protected readonly descriptions = SEGMENT_DESCRIPTIONS;
+  protected readonly actions = SEGMENT_ACTIONS;
+  protected readonly pageSize = PAGE_SIZE;
   protected readonly fmt = {
     peso: formatPeso,
     phone: formatPhone,
@@ -46,14 +40,22 @@ export class Retention implements OnInit {
     dateTime: formatDateTime,
   };
 
-  protected readonly loadState = signal<LoadState>('loading');
-  protected readonly result = signal<RetentionResult | null>(null);
-
-  // Follow-up list
-  protected readonly segmentFilter = signal<'all' | SegmentName>('all');
+  protected readonly segmentFilter = signal<'all' | SegmentName>('Inactive');
   protected readonly search = signal('');
-  protected readonly sort = signal<SortKey>('recency');
-  protected readonly page = signal(0);
+  protected readonly sort = signal<SortKey>('spend');
+  protected readonly page = signal(1);
+
+  /** Plain name of the group the list is showing, or null for all patients. */
+  protected readonly filterLabel = computed(() => {
+    const seg = this.segmentFilter();
+    return seg === 'all' ? null : SEGMENT_LABELS[seg];
+  });
+
+  protected readonly cards = computed(() => {
+    const r = this.result();
+    if (!r) return [];
+    return SEGMENTS.map((name) => r.payload.segments.find((s) => s.segment === name)).filter((s) => !!s);
+  });
 
   protected readonly filtered = computed(() => {
     const patients = this.result()?.payload.patients ?? [];
@@ -67,208 +69,46 @@ export class Retention implements OnInit {
       (digits.length >= 3 && (p.contact_number ?? '').includes(digits));
     const rows = patients.filter((p) => (seg === 'all' || p.segment === seg) && matches(p));
     const by: Record<SortKey, (a: RetentionPatient, b: RetentionPatient) => number> = {
-      recency: (a, b) => b.recency_days - a.recency_days,
       spend: (a, b) => b.total_fee - a.total_fee,
+      recency: (a, b) => b.recency_days - a.recency_days,
       name: (a, b) => a.name.localeCompare(b.name),
     };
     return [...rows].sort(by[this.sort()]);
   });
-  protected readonly pageCount = computed(() =>
-    Math.max(1, Math.ceil(this.filtered().length / PAGE_SIZE)),
-  );
+
   protected readonly pageRows = computed(() =>
-    this.filtered().slice(this.page() * PAGE_SIZE, (this.page() + 1) * PAGE_SIZE),
+    this.filtered().slice((this.page() - 1) * PAGE_SIZE, this.page() * PAGE_SIZE),
   );
+
   protected readonly rangeText = computed(() => {
     const total = this.filtered().length;
     if (!total) return 'No patients match';
-    const from = this.page() * PAGE_SIZE + 1;
+    const from = (this.page() - 1) * PAGE_SIZE + 1;
     const to = Math.min(total, from + PAGE_SIZE - 1);
     return `Showing ${formatNumber(from)}–${formatNumber(to)} of ${formatNumber(total)} patients`;
   });
 
-  // Evaluation
-  protected readonly silhouetteRows = computed(() => {
-    const r = this.result();
-    if (!r) return [];
-    return Object.entries(r.metrics.silhouette_by_k)
-      .map(([k, score]) => ({ k: Number(k), score, used: Number(k) === r.metrics.k }))
-      .sort((a, b) => a.k - b.k);
-  });
-
-  // Charts
-  protected readonly scatterData = computed<ChartData<'scatter'>>(() => {
-    const t = this.themes.theme();
-    const patients = this.result()?.payload.patients ?? [];
-    return {
-      datasets: SEGMENTS.map((seg) => ({
-        label: `${seg} (${SEGMENT_SHAPE_NAMES[seg]})`,
-        data: patients
-          .filter((p) => p.segment === seg)
-          .map((p) => ({ x: p.recency_days, y: p.total_fee })),
-        pointStyle: SEGMENT_SHAPES[seg],
-        backgroundColor: t.segments[seg],
-        borderColor: t.surface,
-        borderWidth: 1.5,
-        pointRadius: 5,
-        pointHoverRadius: 7,
-        pointHitRadius: 8,
-      })),
-    };
-  });
-
-  protected readonly scatterOptions = computed<ChartConfiguration<'scatter'>['options']>(() => {
-    const t = this.themes.theme();
-    const axis = (title: string) => ({
-      title: { display: true, text: title, color: t.muted },
-      ticks: { color: t.muted },
-      grid: { color: t.grid },
-      border: { color: t.axis },
-    });
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: t.reducedMotion ? false : { duration: 400 },
-      scales: {
-        x: { ...axis('Days since last visit'), min: 0 },
-        y: {
-          ...axis('Total spend (log scale)'),
-          type: 'logarithmic',
-          // Start below the lowest fee so the cheapest visits don't sit on the axis line.
-          min: 200,
-          ticks: {
-            color: t.muted,
-            callback: (value) => {
-              const v = Number(value);
-              const lead = v / 10 ** Math.floor(Math.log10(v));
-              return [1, 2, 5].includes(Math.round(lead)) ? formatPesoCompact(v) : '';
-            },
-          },
-        },
-      },
-      plugins: {
-        legend: {
-          position: 'top',
-          labels: { color: t.text, usePointStyle: true, padding: 16 },
-        },
-        tooltip: {
-          callbacks: {
-            label: (item: TooltipItem<'scatter'>) => {
-              const seg = SEGMENTS[item.datasetIndex];
-              return `${seg}: ${formatNumber(item.parsed.x ?? 0)} days since last visit, ` +
-                `${formatPeso(item.parsed.y ?? 0)} total spend`;
-            },
-          },
-        },
-      },
-    };
-  });
-
-  protected readonly scatterLabel = computed(() => {
-    const r = this.result();
-    if (!r) return '';
-    const parts = r.payload.segments.map(
-      (s) =>
-        `${s.segment}, shown as ${SEGMENT_SHAPE_NAMES[s.segment]}s: ${formatNumber(s.patients)} ` +
-        `patients, average ${formatNumber(Math.round(s.avg_recency_days))} days since last ` +
-        `visit, average spend ${formatPeso(s.avg_total_fee)}`,
-    );
-    return (
-      `Scatter chart of ${formatNumber(r.payload.patients.length)} patients, days since last ` +
-      `visit against total spend, by segment. ${parts.join('. ')}.`
-    );
-  });
-
-  protected readonly silhouetteData = computed<ChartData<'bar'>>(() => {
-    const t = this.themes.theme();
-    const rows = this.silhouetteRows();
-    return {
-      labels: rows.map((r) => (r.used ? `${r.k} (used)` : String(r.k))),
-      datasets: [
-        {
-          label: 'Silhouette score',
-          data: rows.map((r) => r.score),
-          backgroundColor: t.accent,
-          borderRadius: { topLeft: 4, topRight: 4 },
-          borderSkipped: 'start',
-          maxBarThickness: 24,
-        },
-      ],
-    };
-  });
-
-  protected readonly silhouetteOptions = computed<ChartConfiguration<'bar'>['options']>(() => {
-    const t = this.themes.theme();
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: t.reducedMotion ? false : { duration: 400 },
-      scales: {
-        x: {
-          title: { display: true, text: 'Number of segments (k)', color: t.muted },
-          ticks: { color: t.muted },
-          grid: { display: false },
-          border: { color: t.axis },
-        },
-        y: {
-          title: { display: true, text: 'Silhouette score', color: t.muted },
-          ticks: { color: t.muted },
-          grid: { color: t.grid },
-          border: { display: false },
-          min: 0,
-          suggestedMax: 0.5,
-        },
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: { label: (item) => `Silhouette score ${Number(item.parsed.y).toFixed(3)}` },
-        },
-      },
-    };
-  });
-
-  protected readonly silhouetteLabel = computed(() => {
-    const rows = this.silhouetteRows();
-    const values = rows.map((r) => `k=${r.k}: ${r.score.toFixed(3)}${r.used ? ' (used)' : ''}`);
-    return `Bar chart of silhouette score by number of segments. ${values.join(', ')}.`;
-  });
-
   ngOnInit(): void {
-    this.loadLatest();
+    this.store.load('retention');
+  }
+
+  protected showGroup(name: SegmentName): void {
+    this.setSegment(name);
+    setTimeout(() => document.getElementById('followup-heading')?.focus());
   }
 
   protected setSegment(value: string): void {
     this.segmentFilter.set(value === 'all' ? 'all' : (value as SegmentName));
-    this.page.set(0);
+    this.page.set(1);
   }
 
   protected setSearch(value: string): void {
     this.search.set(value);
-    this.page.set(0);
+    this.page.set(1);
   }
 
   protected setSort(value: string): void {
     this.sort.set(value as SortKey);
-    this.page.set(0);
-  }
-
-  protected goTo(page: number): void {
-    this.page.set(Math.min(Math.max(page, 0), this.pageCount() - 1));
-  }
-
-  protected loadLatest(): void {
-    this.api.latest<RetentionResult>(TYPE).subscribe({
-      next: (r) => {
-        this.result.set(r);
-        this.loadState.set('ready');
-      },
-      error: (err: unknown) => {
-        if (err instanceof HttpErrorResponse && err.status === 404) this.loadState.set('empty');
-        else if (!(err instanceof HttpErrorResponse && err.status === 401)) {
-          this.loadState.set('error');
-        }
-      },
-    });
+    this.page.set(1);
   }
 }

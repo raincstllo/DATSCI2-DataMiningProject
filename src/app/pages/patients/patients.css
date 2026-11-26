@@ -1,0 +1,225 @@
+/* Patients pages on the shared record card (styles.css). */
+:host {
+  display: block;
+}
+
+.back {
+  margin: 0 0 0.75rem;
+}
+
+.back a {
+  display: inline-block;
+  min-height: 1.5rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+.list-status {
+  margin: 1.25rem 0 0.5rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--tint);
+  font-size: 0.9375rem;
+}
+
+.list-status:empty {
+  display: none;
+}
+
+.record-cell .record-note {
+  margin: 0.75rem 0;
+  padding-left: 0.875rem;
+  padding-right: 0.875rem;
+}
+
+/* Patient facts: four ruled cells. */
+.facts {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  margin: 0;
+  padding: 1rem 1.75rem;
+}
+
+.contact dt {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.contact dd {
+  margin: 0;
+}
+
+.note {
+  margin: 0;
+  padding: 0 1.75rem 1rem;
+}
+
+.history {
+  border-top: 1.5px solid var(--rule);
+}
+
+.history h2 {
+  margin-bottom: 0.75rem;
+}
+
+.call-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+
+.call-btn:hover {
+  background: var(--tint);
+}
+
+.history .tag {
+  margin-left: 0.5rem;
+}
+
+.history .row-meta .tag {
+  margin-left: 0;
+  white-space: normal;
+}
+
+.empty {
+  margin: 0;
+}
+
+/* Phone rows are hidden until the table stops fitting. */
+.row-list {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1.5px solid var(--rule);
+}
+
+.row {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--rule-fine);
+}
+
+.row p {
+  margin: 0;
+}
+
+.row-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+}
+
+.row-name {
+  font-weight: 700;
+}
+
+a.row-name {
+  display: inline-block;
+  min-height: 1.5rem;
+}
+
+.row-id {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.row-meta {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.row-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.25rem;
+}
+
+.row-total {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Form */
+.form-cell {
+  padding-bottom: 1.75rem;
+}
+
+.form-cell .form-grid,
+.form-cell .error-summary,
+.form-cell .alert {
+  max-width: 34rem;
+}
+
+.form-cell .field input {
+  min-height: 2.75rem;
+}
+
+.form-actions {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 60rem) {
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 40rem) {
+  .list-table {
+    display: none;
+  }
+
+  .row-list {
+    display: block;
+  }
+
+  .fig {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .fig .fig-value {
+    font-size: 1.5rem;
+  }
+
+  .fig .fig-text {
+    font-size: 1.125rem;
+  }
+
+  .contact,
+  .note {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .row-foot .btn {
+    min-height: 2.75rem;
+  }
+
+  .form-actions .btn {
+    flex: 1 1 auto;
+  }
+}

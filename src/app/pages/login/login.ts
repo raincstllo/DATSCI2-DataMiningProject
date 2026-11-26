@@ -3,10 +3,11 @@ import { Component, ElementRef, inject, signal, viewChild } from '@angular/core'
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { ToothStrip } from '../../shared/tooth-strip';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ToothStrip],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
@@ -16,6 +17,7 @@ export class Login {
   private readonly errorBox = viewChild<ElementRef<HTMLElement>>('errorBox');
 
   protected readonly expired = inject(ActivatedRoute).snapshot.queryParamMap.has('expired');
+  protected readonly logoMissing = signal(false);
   protected readonly submitting = signal(false);
   protected readonly submitted = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -41,9 +43,11 @@ export class Login {
     this.submitting.set(true);
     const { username, password } = this.form.getRawValue();
     this.auth.login(username, password).subscribe({
-      next: () => this.router.navigate(['/retention']),
+      next: () => this.router.navigate(['/']),
       error: (err: unknown) => {
         this.submitting.set(false);
+        // The cleared password is not a mistake to flag; only the server error is.
+        this.submitted.set(false);
         this.form.controls.password.reset();
         this.error.set(this.messageFor(err));
         setTimeout(() => this.errorBox()?.nativeElement.focus());

@@ -1,13 +1,17 @@
-<section class="card" aria-labelledby="run-heading">
+<section class="run-panel" [attr.aria-labelledby]="idPrefix() + '-heading'">
   <div class="run-head">
     <div>
-      <h2 id="run-heading">Run analysis</h2>
+      @if (headingLevel() === 3) {
+        <h3 [id]="idPrefix() + '-heading'">{{ heading() }}</h3>
+      } @else {
+        <h2 [id]="idPrefix() + '-heading'">{{ heading() }}</h2>
+      }
       @if (description()) {
         <p class="muted">{{ description() }}</p>
       }
     </div>
     <button type="button" class="btn" (click)="run()" [disabled]="running()">
-      {{ running() ? 'Running…' : 'Run analysis' }}
+      {{ running() ? 'Working…' : buttonLabel() }}
     </button>
   </div>
 
@@ -23,17 +27,21 @@
         Another analysis ({{ j.type }}) is running. This one can start when it finishes.
       </p>
     }
-    <h3>Pipeline steps</h3>
+    @if (headingLevel() === 3) {
+      <h4>Pipeline steps</h4>
+    } @else {
+      <h3>Pipeline steps</h3>
+    }
     <ol class="steps">
       @for (s of steps(); track s.key) {
         <li [class.step-error]="s.error">
-          <span class="step-mark" aria-hidden="true">{{ s.error ? '✕' : '✓' }}</span>
+          <span class="mark" [class.mark-attention]="s.error" aria-hidden="true"></span>
           {{ s.text }}
         </li>
       }
       @if (j.status === 'running') {
         <li class="step-pending">
-          <span class="step-mark" aria-hidden="true">…</span>
+          <span class="mark mark-expected step-pulse" aria-hidden="true"></span>
           {{ finishing() ? 'Closing Spark and loading results' : 'Working on the next step' }}
         </li>
       }

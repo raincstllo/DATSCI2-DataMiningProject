@@ -4,7 +4,7 @@ const Patient = require('../models/patient');
 const Visit = require('../models/visit');
 const { nextId } = require('../models/counter');
 const { SERVICES, VISIT_ID } = require('../constants/records');
-const { visitInput, intParam, escapeRegex } = require('../validation');
+const { visitInput, intParam, escapeRegex, todayInManila } = require('../validation');
 
 const router = express.Router();
 
@@ -45,6 +45,37 @@ async function requirePatient(patientId) {
 const dateParam = (v) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T00:00:00Z`) : null);
 
 router.get('/services', (req, res) => res.json(SERVICES));
+
+/** Totals for a date range (default: this month so far), e.g. for the home page. */
+router.get('/summary', async (req, res, next) => {
+  try {
+    const today = todayInManila();
+    const from = dateParam(req.query.from) ?? new Date(`${today.slice(0, 8)}01T00:00:00Z`);
+    const to = dateParam(req.query.to) ?? new Date(`${today}T00:00:00Z`);
+    const [row] = await Visit.aggregate([
+      { $match: { date_visited: { $gte: from, $lte: to } } },
+      {
+        $group: {
+          _id: null,
+          visits: { $sum: 1 },
+          patients: { $addToSet: '$patient_id' },
+          services: { $sum: { $size: '$services' } },
+          revenue: { $sum: { $sum: '$services.fee' } },
+        },
+      },
+    ]);
+    res.json({
+      from: from.toISOString().slice(0, 10),
+      to: to.toISOString().slice(0, 10),
+      visits: row?.visits ?? 0,
+      patients: row?.patients.length ?? 0,
+      services: row?.services ?? 0,
+      revenue: row?.revenue ?? 0,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.get('/', async (req, res, next) => {
   try {

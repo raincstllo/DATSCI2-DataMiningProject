@@ -4,81 +4,15 @@ import { formatDate, formatNumber, formatPhone } from '../../core/format';
 import { Page, PatientListItem } from '../../core/records.models';
 import { readApiError, RecordsService } from '../../core/records.service';
 import { Pager } from '../../shared/pager';
+import { ToothStrip } from '../../shared/tooth-strip';
 
 const PAGE_SIZE = 25;
 
 @Component({
   selector: 'app-patient-list',
-  imports: [RouterLink, Pager],
-  template: `
-    <div class="stack">
-      <div class="page-head">
-        <h1>Patients</h1>
-        <a class="btn" routerLink="/patients/new">Add patient</a>
-      </div>
-
-      <section class="card" aria-labelledby="list-heading">
-        <h2 id="list-heading" class="visually-hidden">Patient list</h2>
-        <div class="filters">
-          <div class="field">
-            <label for="patient-search">Search by name, patient ID or number</label>
-            <input
-              id="patient-search"
-              type="search"
-              autocomplete="off"
-              [value]="query()"
-              (input)="onSearch($any($event.target).value)"
-            />
-          </div>
-        </div>
-
-        <p role="status" class="muted">{{ status() }}</p>
-
-        @if (error(); as message) {
-          <p class="alert alert-error" role="alert">{{ message }}</p>
-        }
-
-        @if (data(); as d) {
-          @if (d.items.length) {
-            <div class="table-wrap" tabindex="0" role="region" aria-label="Patients table">
-              <table>
-                <caption class="visually-hidden">Patients, newest first</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">Patient ID</th>
-                    <th scope="col">Contact number</th>
-                    <th scope="col" class="num">Visits</th>
-                    <th scope="col">Last visit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (p of d.items; track p.patient_id) {
-                    <tr>
-                      <th scope="row">
-                        <a [routerLink]="['/patients', p.patient_id]">{{ p.name }}</a>
-                      </th>
-                      <td>{{ p.patient_id }}</td>
-                      <td>{{ phone(p.contact_number) }}</td>
-                      <td class="num">{{ p.visit_count }}</td>
-                      <td>{{ p.last_visit ? date(p.last_visit) : 'No visits yet' }}</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-          <app-pager
-            [page]="page()"
-            [total]="d.total"
-            [pageSize]="pageSize"
-            label="Patient list pages"
-            (pageChange)="goTo($event)"
-          />
-        }
-      </section>
-    </div>
-  `,
+  imports: [RouterLink, Pager, ToothStrip],
+  templateUrl: './patient-list.html',
+  styleUrl: './patients.css',
 })
 export class PatientList implements OnInit {
   private readonly records = inject(RecordsService);

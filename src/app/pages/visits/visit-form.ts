@@ -6,6 +6,7 @@ import { FlashService } from '../../core/flash.service';
 import { formatPeso, formatPhone, todayIso } from '../../core/format';
 import { PatientListItem, Visit } from '../../core/records.models';
 import { readApiError, RecordsService } from '../../core/records.service';
+import { ToothStrip } from '../../shared/tooth-strip';
 
 type ServiceRow = FormGroup<{
   nature_of_visit: FormControl<string>;
@@ -17,57 +18,9 @@ const TOOTH = /^([1-9]|[12]\d|3[0-2]|[A-T])$/;
 
 @Component({
   selector: 'app-visit-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, ToothStrip],
   templateUrl: './visit-form.html',
-  styles: `
-    fieldset {
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius);
-      padding: 1rem;
-      margin: 0;
-    }
-    legend {
-      font-weight: 600;
-      padding: 0 0.25rem;
-    }
-    .service-row {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.75rem;
-      align-items: start;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-    @media (min-width: 40rem) {
-      .service-row {
-        grid-template-columns: minmax(10rem, 2fr) minmax(7rem, 1.4fr) minmax(6rem, 1fr) auto;
-      }
-    }
-    .results {
-      list-style: none;
-      margin: 0.5rem 0 0;
-      padding: 0;
-      display: grid;
-      gap: 0.25rem;
-    }
-    .results button {
-      width: 100%;
-      justify-content: flex-start;
-      text-align: left;
-      font-weight: 400;
-    }
-    .total {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin: 0;
-    }
-    .add-row {
-      margin-top: 0.75rem;
-    }
-    .selected {
-      margin: 0;
-    }
-  `,
+  styleUrl: './visit-form.css',
 })
 export class VisitForm implements OnInit {
   private readonly records = inject(RecordsService);
@@ -109,7 +62,10 @@ export class VisitForm implements OnInit {
 
   constructor() {
     this.addRow();
-    this.form.valueChanges.subscribe(() => this.total.set(this.computeTotal()));
+    this.form.valueChanges.subscribe(() => {
+      this.total.set(this.computeTotal());
+      this.dropFixedErrors();
+    });
     inject(DestroyRef).onDestroy(() => clearTimeout(this.searchTimer));
   }
 
@@ -165,10 +121,7 @@ export class VisitForm implements OnInit {
     this.results.set([]);
     this.patientQuery.set('');
     this.searchStatus.set('');
-    this.errors.update((e) => {
-      const { patient_id, ...rest } = e;
-      return rest;
-    });
+    this.dropFixedErrors();
     setTimeout(() => document.getElementById('date_visited')?.focus());
   }
 
@@ -264,6 +217,20 @@ export class VisitForm implements OnInit {
       }
     });
     return errors;
+  }
+
+  /**
+   * Removes the messages for fields the owner has since corrected. New problems are not
+   * flagged while typing; they still wait for Save.
+   */
+  private dropFixedErrors(): void {
+    const current = this.errors();
+    if (!Object.keys(current).length) return;
+    const still = this.validate();
+    const kept = Object.fromEntries(Object.entries(current).filter(([path]) => path in still));
+    if (Object.keys(kept).length === Object.keys(current).length) return;
+    this.errors.set(kept);
+    this.summary.update((list) => list.filter((e) => e.field in kept));
   }
 
   /** Shows field errors plus a linked summary; returns true when there were any. */

@@ -1,0 +1,134 @@
+/* Visits list on the shared record card (styles.css). */
+.record-head .actions .btn {
+  min-width: 8rem;
+}
+
+.field-wide {
+  flex: 2 1 16rem;
+}
+
+.filters .field input,
+.filters .field select {
+  min-height: 2.75rem;
+}
+
+.list-status {
+  margin: 1.25rem 0 0.5rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--tint);
+  font-size: 0.9375rem;
+}
+
+.list-status:empty {
+  display: none;
+}
+
+.record-note-error {
+  margin: 0.5rem 0;
+  padding: 0.75rem 0.875rem;
+}
+
+.list-table {
+  border-top: 1.5px solid var(--rule);
+}
+
+.list-table .cell-wrap {
+  min-width: 14rem;
+}
+
+.list-table .tag {
+  display: block;
+  width: max-content;
+  margin-top: 0.25rem;
+  white-space: normal;
+}
+
+.row-actions {
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+}
+
+/* Phone rows are hidden until the table stops fitting. */
+.visit-rows {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1.5px solid var(--rule);
+}
+
+.visit-row {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--rule-fine);
+}
+
+.visit-row p {
+  margin: 0;
+}
+
+.visit-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.visit-date {
+  font-weight: 700;
+}
+
+.visit-total {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.visit-patient a {
+  display: inline-block;
+  min-height: 1.5rem;
+  font-weight: 700;
+}
+
+.visit-services {
+  overflow-wrap: anywhere;
+}
+
+.visit-id {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.visit-actions {
+  margin-top: 0.5rem;
+}
+
+.visit-actions .btn {
+  flex: 1 1 8rem;
+}
+
+@media (max-width: 52rem) {
+  .list-table {
+    display: none;
+  }
+
+  .visit-rows {
+    display: block;
+  }
+}
+
+@media (max-width: 40rem) {
+  .record-head .actions {
+    width: 100%;
+  }
+
+  .filters .field {
+    flex-basis: 100%;
+  }
+
+  .filters .field:nth-child(n + 3) {
+    flex-basis: calc(50% - 0.5rem);
+    min-width: 0;
+  }
+}

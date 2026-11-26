@@ -1,0 +1,150 @@
+<p class="back"><a routerLink="/patients">← All patients</a></p>
+
+@if (error(); as message) {
+  <div class="record">
+    <p class="record-note record-note-error" role="alert">
+      <span class="mark mark-attention" aria-hidden="true"></span>
+      <span>{{ message }}</span>
+    </p>
+  </div>
+}
+
+@if (patient(); as p) {
+  <div class="record">
+    <app-tooth-strip />
+
+    <div class="record-head">
+      <div>
+        <h1>{{ p.name }}</h1>
+        <p class="record-date">Patient ID {{ p.patient_id }}</p>
+      </div>
+      <div class="actions">
+        <a class="btn" routerLink="/visits/new" [queryParams]="{ patient: p.patient_id }">Log visit</a>
+        <a class="btn btn-secondary" [routerLink]="['/patients', p.patient_id, 'edit']">Edit</a>
+        @if (p.visits.length === 0) {
+          <button type="button" class="btn btn-secondary" (click)="remove()">Delete</button>
+        }
+      </div>
+    </div>
+
+    <section aria-labelledby="info-heading">
+      <h2 id="info-heading" class="visually-hidden">Details</h2>
+      <ul class="figures facts">
+        <li class="fig">
+          <h3 class="fig-label">Visits</h3>
+          <p class="fig-value">{{ p.visits.length }}</p>
+          <p class="fig-note">On record</p>
+        </li>
+        <li class="fig">
+          <h3 class="fig-label">Total spent</h3>
+          <p class="fig-value">{{ peso(totalSpent()) }}</p>
+          <p class="fig-note">All visits added up</p>
+        </li>
+        <li class="fig">
+          <h3 class="fig-label">First visit</h3>
+          <p class="fig-value fig-text">{{ firstVisit() ? date(firstVisit()!) : '—' }}</p>
+          <p class="fig-note"></p>
+        </li>
+        <li class="fig">
+          <h3 class="fig-label">Last visit</h3>
+          <p class="fig-value fig-text">{{ lastVisit() ? date(lastVisit()!) : '—' }}</p>
+          <p class="fig-note"></p>
+        </li>
+      </ul>
+      <dl class="contact">
+        <dt>Mobile number</dt>
+        <dd>
+          <a class="call-btn" [href]="'tel:' + p.contact_number">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                d="M5.6 3.5h3l1.6 4.2-2 1.4a10.5 10.5 0 0 0 6.7 6.7l1.4-2 4.2 1.6v3a1.6 1.6 0 0 1-1.7 1.6A16.5 16.5 0 0 1 4 5.2a1.6 1.6 0 0 1 1.6-1.7z"
+              />
+            </svg>
+            {{ phone(p.contact_number) }}
+          </a>
+        </dd>
+      </dl>
+      @if (p.visits.length > 0) {
+        <p class="hint note">To delete this patient, delete their visits first.</p>
+      }
+    </section>
+
+    <section class="record-cell history" aria-labelledby="history-heading">
+      <h2 id="history-heading">Visit history</h2>
+      @if (p.visits.length) {
+        <div class="table-wrap list-table" tabindex="0" role="region" aria-label="Visit history table">
+          <table>
+            <caption class="visually-hidden">
+              Visit history, newest first
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Date</th>
+                <th scope="col">Visit ID</th>
+                <th scope="col">Services</th>
+                <th scope="col" class="num">Total</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (v of p.visits; track v.visit_id) {
+                <tr>
+                  <th scope="row">
+                    {{ date(v.date_visited) }}
+                    @if (v.date_visited > today) {
+                      <span class="tag tag-warning">Future date, not used in analysis</span>
+                    }
+                  </th>
+                  <td>{{ v.visit_id }}</td>
+                  <td class="cell-wrap">{{ serviceText(v) }}</td>
+                  <td class="num">{{ peso(v.total_fee) }}</td>
+                  <td>
+                    <a class="btn btn-secondary btn-small" [routerLink]="['/visits', v.visit_id, 'edit']"
+                      >Edit <span class="visually-hidden">visit {{ v.visit_id }}</span></a
+                    >
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <ul class="row-list" aria-label="Visit history">
+          @for (v of p.visits; track v.visit_id) {
+            <li class="row">
+              <div class="row-top">
+                <span class="row-name">{{ date(v.date_visited) }}</span>
+                <span class="row-id">{{ v.visit_id }}</span>
+              </div>
+              @if (v.date_visited > today) {
+                <p class="row-meta"><span class="tag tag-warning">Future date, not used in analysis</span></p>
+              }
+              <p class="row-meta">{{ serviceText(v) }}</p>
+              <div class="row-foot">
+                <span class="row-total">{{ peso(v.total_fee) }}</span>
+                <a class="btn btn-secondary" [routerLink]="['/visits', v.visit_id, 'edit']"
+                  >Edit <span class="visually-hidden">visit {{ v.visit_id }}</span></a
+                >
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="record-note empty">
+          <span class="mark mark-expected" aria-hidden="true"></span>
+          <span>No visits recorded yet.</span>
+        </p>
+      }
+    </section>
+
+    <app-confirm-dialog
+      heading="Delete this patient?"
+      [message]="'This permanently deletes ' + p.name + ' (' + p.patient_id + ').'"
+      confirmLabel="Delete patient"
+    />
+  </div>
+} @else if (!error()) {
+  <div class="record">
+    <p class="record-note" role="status">Loading…</p>
+  </div>
+}

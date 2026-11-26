@@ -1,103 +1,212 @@
-:host {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+/* Revenue on the shared record card (styles.css). */
+/* Figures: next month's expected money leads, then last month for comparison, then the later months. */
+.figures {
+  grid-template-columns: 1.3fr 1.3fr 1fr;
 }
 
-.lead {
-  max-width: 48rem;
-  margin: 0;
+.figures-two {
+  grid-template-columns: 1fr 1fr;
 }
 
-.meta {
-  margin: 0;
+.fig-money .fig-value {
+  font-size: clamp(2rem, 1.4rem + 1.6vw, 2.75rem);
 }
 
-.tiles {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
-  gap: 1rem;
+/* The recorded figure is printed in ink. */
+.fig-recorded .fig-value {
+  color: var(--ink);
 }
 
-.tile p {
-  margin: 0;
-}
-
-.tile-label {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
-.tile-value {
-  font-size: 1.6rem;
+.fig-prefix {
+  font-size: 1.125rem;
   font-weight: 600;
-  margin: 0.25rem 0 !important;
+  letter-spacing: 0;
+  color: var(--text-secondary);
 }
 
-.tile-note {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
+/* The later months: a short ruled list in place of a single figure. */
+.fig .later {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+
+.later li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 1rem;
+  padding: 0.3125rem 0;
+  border-bottom: 1px solid var(--rule-fine);
+}
+
+.later li:last-child {
+  border-bottom: 0;
+}
+
+.later-month {
+  font-weight: 600;
+}
+
+.later-amount {
+  font-weight: 700;
+}
+
+/* Body cells under the figures. */
+.record-cell h2 {
+  margin: 0 0 0.75rem;
+}
+
+.record-wide {
+  border-bottom: 1.5px solid var(--rule);
+}
+
+.legend {
+  margin: 0 0 0.25rem;
+}
+
+/* Swatch for the shaded likely range, outlined so it holds 3:1 against the card. */
+.band {
+  display: inline-block;
+  flex: none;
+  width: 1.25rem;
+  height: 0.75rem;
+  border: 1px dashed var(--ink);
+  background: color-mix(in srgb, var(--ink) 18%, transparent);
 }
 
 .chart-box {
-  position: relative;
-  height: 18rem;
-  margin: 1rem 0;
+  margin-top: 0.75rem;
 }
 
-.chart-tall {
-  height: 24rem;
-}
-
-.chart-services {
-  height: 26rem;
-}
-
-.eval-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-  gap: 1.5rem;
-  margin-top: 1rem;
-}
-
-.eval-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
-  gap: 0.75rem;
+/* Ranked services: ruled rows, the rank in faded ink. */
+.rank {
+  list-style: none;
   margin: 0;
+  padding: 0;
+  border-top: 1.5px solid var(--rule);
+  counter-reset: rank;
 }
 
-.stats dt {
-  font-size: 0.85rem;
+.rank li {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.125rem 1rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--rule-fine);
+  counter-increment: rank;
+}
+
+.rank li::before {
+  content: counter(rank) '.';
   color: var(--text-secondary);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
-.stats dd {
+.rank-name {
+  font-weight: 700;
+}
+
+.rank-figure {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-note {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0.875rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+}
+
+.cell-note .mark {
+  transform: translateY(0.0625rem);
+}
+
+/* Service pairs: one ruled row per pair, the pair named first. */
+.pairs {
+  list-style: none;
   margin: 0;
-  font-weight: 600;
+  padding: 0;
+  border-top: 1.5px solid var(--rule);
 }
 
-.badge {
-  display: inline-block;
-  margin-left: 0.35rem;
-  padding: 0 0.4rem;
-  border: 1px solid var(--success);
-  border-radius: 999px;
-  color: var(--success);
-  font-size: 0.75rem;
-  font-weight: 600;
+.pairs li {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--rule-fine);
 }
 
-.small {
-  font-size: 0.9rem;
+.pairs li:last-child {
+  border-bottom: 0;
+}
+
+.pairs p {
+  margin: 0;
+}
+
+.pair-names {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.5rem;
+}
+
+.pair-join {
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.pairs .pair-text {
+  margin-top: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  max-width: 60ch;
+}
+
+@media (max-width: 75rem) {
+  .figures {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* The later months take the full row under the two money figures. */
+  .figures > .fig:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  .figures > .fig:nth-child(3) .later {
+    max-width: 26rem;
+  }
+}
+
+@media (max-width: 40rem) {
+  .figures,
+  .figures-two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chart-tall {
+    height: 18rem;
+  }
+
+  /* Phones: the figure drops under the service name. */
+  .rank li {
+    grid-template-columns: 1.5rem minmax(0, 1fr);
+  }
+
+  .rank-figure {
+    grid-column: 2;
+  }
+
+  .record-foot {
+    padding: 1rem;
+  }
 }

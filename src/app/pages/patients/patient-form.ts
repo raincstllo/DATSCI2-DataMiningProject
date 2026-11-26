@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FlashService } from '../../core/flash.service';
 import { Patient } from '../../core/records.models';
 import { readApiError, RecordsService } from '../../core/records.service';
+import { ToothStrip } from '../../shared/tooth-strip';
 
 type Field = 'name' | 'contact_number';
 
@@ -12,82 +13,9 @@ const LABELS: Record<Field, string> = { name: 'Full name', contact_number: 'Mobi
 
 @Component({
   selector: 'app-patient-form',
-  imports: [ReactiveFormsModule, RouterLink],
-  template: `
-    <div class="stack">
-      <h1>{{ id ? 'Edit patient' : 'Add patient' }}</h1>
-
-      <div class="card form-card">
-        @if (loading()) {
-          <p role="status">Loading…</p>
-        } @else {
-          @if (summary().length) {
-            <div class="error-summary" role="alert" tabindex="-1" #summaryBox>
-              <h2>Please fix the following</h2>
-              <ul>
-                @for (e of summary(); track e.field) {
-                  <li><a [href]="'#' + e.field" (click)="focusField($event, e.field)">{{ e.text }}</a></li>
-                }
-              </ul>
-            </div>
-          }
-          @if (pageError(); as message) {
-            <p class="alert alert-error" role="alert">
-              {{ message }}
-              @if (duplicate(); as d) {
-                <a [routerLink]="['/patients', d.patient_id]">Open {{ d.name }} ({{ d.patient_id }})</a>
-              }
-            </p>
-          }
-
-          <form [formGroup]="form" (ngSubmit)="save()" novalidate class="form-grid">
-            <div class="field">
-              <label for="name">Full name</label>
-              <input
-                id="name"
-                type="text"
-                formControlName="name"
-                autocomplete="off"
-                maxlength="100"
-                required
-                [attr.aria-invalid]="!!errors()['name']"
-                [attr.aria-describedby]="errors()['name'] ? 'name-error' : null"
-              />
-              @if (errors()['name']; as msg) {
-                <p class="field-error" id="name-error">{{ msg }}</p>
-              }
-            </div>
-
-            <div class="field">
-              <label for="contact_number">Mobile number</label>
-              <input
-                id="contact_number"
-                type="tel"
-                inputmode="numeric"
-                formControlName="contact_number"
-                autocomplete="off"
-                maxlength="16"
-                required
-                [attr.aria-invalid]="!!errors()['contact_number']"
-                [attr.aria-describedby]="'contact-hint' + (errors()['contact_number'] ? ' contact-error' : '')"
-              />
-              <p class="hint" id="contact-hint">11 digits starting with 09, e.g. 0917 123 4567</p>
-              @if (errors()['contact_number']; as msg) {
-                <p class="field-error" id="contact-error">{{ msg }}</p>
-              }
-            </div>
-
-            <div class="actions">
-              <button type="submit" class="btn" [disabled]="saving()">
-                {{ saving() ? 'Saving…' : id ? 'Save changes' : 'Add patient' }}
-              </button>
-              <a class="btn btn-secondary" [routerLink]="id ? ['/patients', id] : ['/patients']">Cancel</a>
-            </div>
-          </form>
-        }
-      </div>
-    </div>
-  `,
+  imports: [ReactiveFormsModule, RouterLink, ToothStrip],
+  templateUrl: './patient-form.html',
+  styleUrl: './patients.css',
 })
 export class PatientForm implements OnInit {
   private readonly records = inject(RecordsService);

@@ -11,6 +11,7 @@ import {
   Visit,
   VisitFilters,
   VisitInput,
+  VisitSummary,
 } from './records.models';
 
 function params(values: object): HttpParams {
@@ -64,6 +65,11 @@ export class RecordsService {
 
   listVisits(filters: VisitFilters): Observable<Page<Visit>> {
     return this.http.get<Page<Visit>>('/api/visits', { params: params(filters) });
+  }
+
+  /** Totals for a date range; defaults to this month so far. */
+  visitSummary(from?: string, to?: string): Observable<VisitSummary> {
+    return this.http.get<VisitSummary>('/api/visits/summary', { params: params({ from, to }) });
   }
 
   getVisit(id: string): Observable<Visit> {
