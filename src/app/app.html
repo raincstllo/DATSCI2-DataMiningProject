@@ -10,6 +10,23 @@
     </a>
     @if (auth.isLoggedIn()) {
       <button
+        type="button"
+        class="sidebar-toggle"
+        [attr.aria-label]="sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+        [attr.title]="sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+        (click)="toggleSidebar()"
+      >
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <rect x="3.5" y="4.5" width="17" height="15" rx="1" />
+          <path d="M9 4.5v15" />
+          @if (sidebarCollapsed()) {
+            <path d="m13 9.5 2.5 2.5-2.5 2.5" />
+          } @else {
+            <path d="M15.5 9.5 13 12l2.5 2.5" />
+          }
+        </svg>
+      </button>
+      <button
         #menuButton
         type="button"
         class="menu-toggle"
@@ -74,7 +91,7 @@
                     }
                   }
                 </svg>
-                <span>{{ item.label }}</span>
+                <span class="nav-label">{{ item.label }}</span>
               </a>
             </li>
           }
@@ -86,7 +103,7 @@
           <path d="m15 8 4 4-4 4" />
           <path d="M19 12H9" />
         </svg>
-        <span>Log out</span>
+        <span class="nav-label">Log out</span>
       </button>
     </div>
   }

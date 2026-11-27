@@ -5,6 +5,16 @@ import { filter } from 'rxjs';
 import { AuthService } from './core/auth.service';
 import { FlashService } from './core/flash.service';
 
+const SIDEBAR_KEY = 'sidebar';
+
+function readSidebarCollapsed(): boolean {
+  try {
+    return localStorage.getItem(SIDEBAR_KEY) === 'collapsed';
+  } catch {
+    return false;
+  }
+}
+
 interface NavItem {
   path: string;
   label: string;
@@ -14,7 +24,10 @@ interface NavItem {
 @Component({
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   selector: 'app-root',
-  host: { '[class.signed-in]': 'auth.isLoggedIn()' },
+  host: {
+    '[class.signed-in]': 'auth.isLoggedIn()',
+    '[class.sidebar-collapsed]': 'sidebarCollapsed()',
+  },
   styleUrl: './app.css',
   templateUrl: './app.html',
 })
@@ -26,6 +39,8 @@ export class App {
   /** Narrow screens only: whether the nav panel under the top bar is open. */
   protected readonly menuOpen = signal(false);
   private readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
+  /** Wide screens only: sidebar shrunk to an icon rail. Open on first visit, then remembered. */
+  protected readonly sidebarCollapsed = signal(readSidebarCollapsed());
 
   constructor() {
     inject(Router)
@@ -50,6 +65,16 @@ export class App {
     if (!this.menuOpen()) return;
     this.menuOpen.set(false);
     if (returnFocus) this.menuButton()?.nativeElement.focus();
+  }
+
+  protected toggleSidebar(): void {
+    const collapsed = !this.sidebarCollapsed();
+    this.sidebarCollapsed.set(collapsed);
+    try {
+      localStorage.setItem(SIDEBAR_KEY, collapsed ? 'collapsed' : 'open');
+    } catch {
+      // Storage unavailable (private mode): the choice lasts for this session only.
+    }
   }
 
   protected skipToMain(event: Event): void {
