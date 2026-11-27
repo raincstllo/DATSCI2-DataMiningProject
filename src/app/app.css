@@ -1,22 +1,28 @@
-/* Top bar: card-stock strip closed by a 4px rule in logo-blue ink. */
+/*
+ * App shell. Signed in on wide screens: a card-stock sidebar closed on its right
+ * edge by the 4px logo-blue rule. Narrow screens and the login page: a top bar
+ * closed by the same rule underneath, with the nav behind a Menu button.
+ */
+:host {
+  display: block;
+}
+
 .site-header {
   background: var(--surface);
   border-bottom: 4px solid var(--ink);
 }
 
-.header-inner {
+.header-bar {
   max-width: 80rem;
   margin: 0 auto;
   padding: 0 1.5rem;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  grid-template-areas: 'brand nav logout';
+  display: flex;
   align-items: center;
-  column-gap: 2rem;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .brand {
-  grid-area: brand;
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
@@ -24,12 +30,14 @@
   padding: 0.625rem 0;
   font-weight: 700;
   font-size: 1.125rem;
+  line-height: 1.2;
   letter-spacing: -0.005em;
   color: var(--ink);
   text-decoration: none;
 }
 
 .logo {
+  flex: none;
   height: 44px;
   width: 44px;
   object-fit: cover;
@@ -38,66 +46,9 @@
   background: #ffffff;
 }
 
-.main-nav {
-  grid-area: nav;
-  min-width: 0;
-}
-
-.main-nav ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  gap: 0.125rem;
-}
-
-.main-nav a {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 4rem;
-  padding: 0 0.875rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
-  transition:
-    color 120ms ease-out,
-    background-color 120ms ease-out;
-}
-
-.main-nav a:hover {
-  color: var(--ink);
-  background: var(--tint);
-}
-
-/* Current page: a tab of pale tooth tint standing on the ink rule. */
-.main-nav a.active {
-  color: var(--ink);
-  background: var(--tint);
-  font-weight: 700;
-}
-
-.main-nav a.active .icon {
-  stroke-width: 2.25;
-}
-
-/* Filled charting mark on the current page. */
-.main-nav a.active::after {
-  content: '';
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--ink);
-  flex: none;
-}
-
-.main-nav a:focus-visible {
-  outline-offset: -3px;
-}
-
+/* Menu button: outlined control, same family as Log out. */
+.menu-toggle,
 .logout {
-  grid-area: logout;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -110,83 +61,91 @@
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    color 120ms ease-out,
+    border-color 120ms ease-out;
 }
 
+.menu-toggle:hover,
 .logout:hover {
   border-color: var(--ink);
   color: var(--ink);
 }
 
-/* Narrower screens: the nav drops to its own row under the brand. */
-@media (max-width: 75rem) {
-  .header-inner {
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      'brand logout'
-      'nav nav';
-  }
-
-  .main-nav {
-    border-top: 1px solid var(--rule-fine);
-    margin: 0 -1.5rem;
-    padding: 0 1.5rem;
-  }
-
-  .main-nav a {
-    min-height: 3.25rem;
-  }
+.menu-toggle[aria-expanded='true'] {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: var(--tint);
 }
 
-/* Phones and small tablets: a 3 x 2 grid of icon-over-label targets. */
-@media (max-width: 40rem) {
-  .header-inner {
-    padding: 0 1rem;
-  }
+/* Narrow screens: the menu panel drops below the bar, in the page flow. */
+.site-menu {
+  display: none;
+  border-top: 1px solid var(--rule-fine);
+  padding: 0.5rem 1.5rem 1rem;
+}
 
-  .brand-name {
-    font-size: 1rem;
-  }
+.site-menu.open {
+  display: block;
+}
 
-  .logo {
-    width: 40px;
-    height: 40px;
-  }
+.main-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
 
-  .main-nav {
-    margin: 0 -1rem;
-    padding: 0;
-  }
+.main-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3rem;
+  padding: 0 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    color 120ms ease-out,
+    background-color 120ms ease-out;
+}
 
-  .main-nav ul {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
-  }
+.main-nav a:hover {
+  color: var(--ink);
+  background: var(--tint);
+}
 
-  .main-nav a {
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.25rem;
-    min-height: 3.75rem;
-    padding: 0.375rem 0.25rem;
-    font-size: 0.875rem;
-    white-space: normal;
-    text-align: center;
-    line-height: 1.2;
-  }
+/* Current page: a row of pale tooth tint, ink text, and the filled charting mark. */
+.main-nav a.active {
+  color: var(--ink);
+  background: var(--tint);
+  font-weight: 700;
+}
 
-  .logout span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
+.main-nav a.active .icon {
+  stroke-width: 2.25;
+}
 
-  .logout {
-    padding: 0 0.625rem;
-  }
+.main-nav a.active::after {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--ink);
+  flex: none;
+}
+
+.main-nav a:focus-visible {
+  outline-offset: -3px;
+}
+
+.site-menu .logout {
+  margin-top: 0.75rem;
+  width: 100%;
+  justify-content: center;
 }
 
 main {
@@ -194,12 +153,6 @@ main {
   max-width: 80rem;
   margin: 0 auto;
   padding: 1.75rem 1.5rem 4rem;
-}
-
-@media (max-width: 40rem) {
-  main {
-    padding: 1rem 0.75rem 3rem;
-  }
 }
 
 main:focus {
@@ -212,4 +165,81 @@ main:focus {
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem 1rem;
+}
+
+/* Wide screens, signed in: the sidebar. */
+@media (min-width: 64rem) {
+  :host(.signed-in) {
+    display: grid;
+    grid-template-columns: 15.5rem minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .site-header.is-app {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 0;
+    border-right: 4px solid var(--ink);
+  }
+
+  .is-app .header-bar {
+    margin: 0;
+    padding: 1.25rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--rule-fine);
+  }
+
+  .is-app .brand {
+    padding: 0;
+  }
+
+  .is-app .menu-toggle {
+    display: none;
+  }
+
+  .is-app .site-menu {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    border-top: 0;
+    padding: 1rem 0.75rem 1.25rem;
+  }
+
+  .is-app .main-nav a {
+    min-height: 2.75rem;
+  }
+
+  .is-app .site-menu .logout {
+    margin-top: auto;
+  }
+
+  :host(.signed-in) main {
+    width: 100%;
+    padding: 1.75rem 2rem 4rem;
+  }
+}
+
+@media (max-width: 40rem) {
+  .header-bar,
+  .site-menu {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .brand-name {
+    font-size: 1rem;
+  }
+
+  .logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  main {
+    padding: 1rem 0.75rem 3rem;
+  }
 }

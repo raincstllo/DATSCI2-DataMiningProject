@@ -1,7 +1,7 @@
 <a class="skip-link" href="#main" (click)="skipToMain($event)">Skip to main content</a>
 
-<header class="site-header">
-  <div class="header-inner">
+<header class="site-header" [class.is-app]="auth.isLoggedIn()" (keydown.escape)="closeMenu(true)">
+  <div class="header-bar">
     <a class="brand" routerLink="/">
       @if (!logoMissing()) {
         <img class="logo" src="logo.jpg" alt="" width="44" height="44" (error)="logoMissing.set(true)" />
@@ -9,6 +9,27 @@
       <span class="brand-name">Atiwag Dental Care</span>
     </a>
     @if (auth.isLoggedIn()) {
+      <button
+        #menuButton
+        type="button"
+        class="menu-toggle"
+        aria-controls="site-menu"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="menuOpen.set(!menuOpen())"
+      >
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          @if (menuOpen()) {
+            <path d="M6 6l12 12M18 6 6 18" />
+          } @else {
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          }
+        </svg>
+        <span>Menu</span>
+      </button>
+    }
+  </div>
+  @if (auth.isLoggedIn()) {
+    <div id="site-menu" class="site-menu" [class.open]="menuOpen()">
       <nav class="main-nav" aria-label="Main">
         <ul>
           @for (item of nav; track item.path) {
@@ -67,8 +88,8 @@
         </svg>
         <span>Log out</span>
       </button>
-    }
-  </div>
+    </div>
+  }
 </header>
 
 <main id="main" tabindex="-1">
